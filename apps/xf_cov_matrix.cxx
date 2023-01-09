@@ -43,10 +43,10 @@ int main( int argc, char** argv )
     }
   }
 
-  TString xf_input_config_file = "./configurations/xf_input.txt";
-  if (run>17) xf_input_config_file = "./configurations/rw_sys_input.txt";
+  TString xf_input_config_file = "../configurations/test_7ch_xs/xf_input.txt";
+  if (run>17) xf_input_config_file = "../configurations/test_7ch_xs/rw_sys_input.txt";
 
-  CovMatrix cov("./configurations/cov_input.txt", xf_input_config_file, "./configurations/xf_file_ch.txt", "./configurations/rw_cv_input.txt");
+  CovMatrix cov("../configurations/test_7ch_xs/cov_input.txt", xf_input_config_file, "../configurations/test_7ch_xs/xf_file_ch.txt", "../configurations/test_7ch_xs/rw_cv_input.txt");
   // cov.add_disabled_ch_name("BG_nueCC_FC_overlay");
   // cov.add_disabled_ch_name("BG_nueCC_PC_overlay");
   // cov.add_disabled_ch_name("BG_nueCC_FC_dirt");

@@ -43,7 +43,7 @@ int main( int argc, char** argv )
     }
   }
   
-  CovMatrix cov("./configurations/cov_input.txt", "./configurations/det_input.txt", "./configurations/det_file_ch.txt", "./configurations/rw_cv_input.txt");
+  CovMatrix cov("../configurations/test_7ch_xs/cov_input.txt", "../configurations/test_7ch_xs/det_input.txt", "../configurations/test_7ch_xs/det_file_ch.txt", "../configurations/test_7ch_xs/rw_cv_input.txt");
   cov.add_disabled_ch_name("BG_nueCC_FC_overlay");
   cov.add_disabled_ch_name("BG_nueCC_PC_overlay");
   // cov.add_disabled_ch_name("nueCC_FC_nueoverlay");
