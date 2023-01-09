@@ -132,7 +132,7 @@ LEEana::CovMatrix::CovMatrix(TString cov_filename, TString cv_filename, TString 
   
   while(!infile.eof()){
     infile >> name >> var_name >> bin_num >> low_limit >> high_limit >> obs_no >> flag_xs_flux >> flag_det >> flag_add >> flag_same_mc_stat >> cov_sec_no >> file_no >> weight >> lee_strength;
-    //    std::cout << name << " " << var_name << " " << low_limit << " " << bin_num << " " << file_no << std::endl;
+    // std::cout << name << " " << var_name << " " << low_limit << " " << bin_num << " " << file_no << std::endl;
     if (bin_num == -1) break;
     
     map_ch_hist[ch_no] = std::make_tuple(name, var_name, bin_num, low_limit, high_limit, weight, obs_no, lee_strength);
@@ -185,7 +185,8 @@ LEEana::CovMatrix::CovMatrix(TString cov_filename, TString cv_filename, TString 
     start_bin += it->second;
     total_cov_bin += it->second;
   }
-  
+ 
+  // std::cout << "cov matrix : " << total_cov_bin << ", " << total_obs_bin << std::endl;
   mat_collapse = new TMatrixD(total_cov_bin,total_obs_bin);
   mat_add_cov = new TMatrixD(total_cov_bin, total_cov_bin);
   

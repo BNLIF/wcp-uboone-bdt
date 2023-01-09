@@ -819,6 +819,33 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
     TString cut_name = it->first;
     int number = it->second;
 
+    double truth_pi0_momentum = -1000.;
+    double truth_pi0_costheta = -1000.;
+    double truth_pi0_energy = -1000.;
+    if(pfeval.truth_pio_energy_1 > 0. && pfeval.truth_pio_energy_2 > 0.){
+      // Calculate momentum
+      double pi0_mass = 135;
+      double alpha = fabs(pfeval.truth_pio_energy_1 - pfeval.truth_pio_energy_2)/(pfeval.truth_pio_energy_1 + pfeval.truth_pio_energy_2);
+      double pi0_total_energy = pi0_mass * sqrt(2./(1-alpha*alpha)/(1-cos(pfeval.truth_pio_angle*3.1415926/180.)));
+      truth_pi0_momentum = sqrt(pi0_total_energy*pi0_total_energy - pi0_mass*pi0_mass);
+      truth_pi0_energy = pi0_total_energy - pi0_mass;
+
+      // Calculate angle
+      for(int jth=0; jth<1000; jth++){
+        int mother = pfeval.truth_mother[jth];
+        int pdgcode = pfeval.truth_pdg[jth];
+        if(mother == 0 && abs(pdgcode)==111){
+          if(truth_pi0_energy <= pfeval.truth_startMomentum[jth][3]){
+            double px = pfeval.truth_startMomentum[jth][0]; // GeV
+            double py = pfeval.truth_startMomentum[jth][1]; // GeV
+            double pz = pfeval.truth_startMomentum[jth][2]; // GeV
+            truth_pi0_costheta = pz / sqrt(px*px + py*py + pz*pz);
+          }
+        }
+        else if(mother > 0) break;
+      }
+    }
+    
     double KE_muon = pfeval.truth_muonMomentum[3]*1000.-105.66; // MeV
     double pmuon   = TMath::Sqrt(pow(KE_muon,2) + 2*KE_muon*105.66); // MeV
     double Pmuon   = TMath::Sqrt(pow(KE_muon,2) + 2*KE_muon*105.66); // MeV
@@ -1627,6 +1654,25 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
       else if (cut_name == "numuCC.inside.Enu.le.4000.gt.2050"){ if (pre_cut && eval.truth_nuEnergy>2050  && eval.truth_nuEnergy<=4000) { return number; } }
       else{ std::cout << "get_xs_signal_no: no cut found!" << std::endl; }
     }
+
+    else if (cut_file == 19){
+
+      bool numu_precut = eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && eval.truth_nuEnergy > 200 && eval.truth_nuEnergy <= 4000;
+      bool nue_precut = eval.truth_nuPdg==12 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && eval.truth_nuEnergy > 200 && eval.truth_nuEnergy <= 4000; 
+      bool ncpi0_precut = eval.truth_isCC==0 && eval.truth_vtxInside==1 && eval.truth_nuEnergy > 200 && eval.truth_nuEnergy <= 4000 && truth_pi0_energy > 0 && truth_pi0_energy <= 1500; 
+      if      (cut_name == "numuCC.inside.Enu.le.705.gt.200"){ if (numu_precut && eval.truth_nuEnergy<=705  && eval.truth_nuEnergy>200)   { return number; } }
+      else if      (cut_name == "numuCC.inside.Enu.le.1050.gt.705"){   if (numu_precut && eval.truth_nuEnergy<=1050  && eval.truth_nuEnergy>705)   { return number; } }
+      else if      (cut_name == "numuCC.inside.Enu.le.1570.gt.1050"){   if (numu_precut && eval.truth_nuEnergy<=1570  && eval.truth_nuEnergy>1050)   { return number; } }
+      else if      (cut_name == "numuCC.inside.Enu.le.4000.gt.1570"){   if (numu_precut && eval.truth_nuEnergy<=4000  && eval.truth_nuEnergy>1570)   { return number; } }
+      else if      (cut_name == "nueCC.inside.Enu.le.705.gt.200"){   if (nue_precut && eval.truth_nuEnergy<=705  && eval.truth_nuEnergy>200)   { return number; } }
+      else if      (cut_name == "nueCC.inside.Enu.le.1050.gt.705"){   if (nue_precut && eval.truth_nuEnergy<=1050  && eval.truth_nuEnergy>705)   { return number; } }
+      else if      (cut_name == "nueCC.inside.Enu.le.1570.gt.1050"){   if (nue_precut && eval.truth_nuEnergy<=1570  && eval.truth_nuEnergy>1050)   { return number; } }
+      else if      (cut_name == "nueCC.inside.Enu.le.4000.gt.1570"){   if (nue_precut && eval.truth_nuEnergy<=4000  && eval.truth_nuEnergy>1570)   { return number; } }
+      else if      (cut_name == "NCPi0.inside.Pi0En.le.500.gt.0"){   if (ncpi0_precut && truth_pi0_energy<=500  && truth_pi0_energy>0)   { return number; } }
+      else if      (cut_name == "NCPi0.inside.Pi0En.le.1000.gt.500"){   if (ncpi0_precut && truth_pi0_energy<=1000  && truth_pi0_energy>500)   { return number; } }
+      else if      (cut_name == "NCPi0.inside.Pi0En.le.1500.gt.1000"){   if (ncpi0_precut && truth_pi0_energy<=1500  && truth_pi0_energy>1000)   { return number; } }
+      else{ std::cout << "get_xs_signal_no: no cut found! whasssad" << std::endl; }
+    }
   }
   
   return -1;
@@ -1634,6 +1680,32 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
 
 bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine){
 
+  double truth_pi0_momentum = -1000.;
+  double truth_pi0_costheta = -1000.;
+  double truth_pi0_energy = -1000.;
+  if(pfeval.truth_pio_energy_1 > 0. && pfeval.truth_pio_energy_2 > 0.){
+    // Calculate momentum
+    double pi0_mass = 135;
+    double alpha = fabs(pfeval.truth_pio_energy_1 - pfeval.truth_pio_energy_2)/(pfeval.truth_pio_energy_1 + pfeval.truth_pio_energy_2);
+    double pi0_total_energy = pi0_mass * sqrt(2./(1-alpha*alpha)/(1-cos(pfeval.truth_pio_angle*3.1415926/180.)));
+    truth_pi0_momentum = sqrt(pi0_total_energy*pi0_total_energy - pi0_mass*pi0_mass);
+    truth_pi0_energy = pi0_total_energy - pi0_mass;
+
+    // Calculate angle
+    for(int jth=0; jth<1000; jth++){
+      int mother = pfeval.truth_mother[jth];
+      int pdgcode = pfeval.truth_pdg[jth];
+      if(mother == 0 && abs(pdgcode)==111){
+        if(truth_pi0_energy <= pfeval.truth_startMomentum[jth][3]){
+          double px = pfeval.truth_startMomentum[jth][0]; // GeV
+          double py = pfeval.truth_startMomentum[jth][1]; // GeV
+          double pz = pfeval.truth_startMomentum[jth][2]; // GeV
+          truth_pi0_costheta = pz / sqrt(px*px + py*py + pz*pz);
+        }
+      }
+      else if(mother > 0) break;
+    }
+  }
 
   double reco_Enu = get_reco_Enu_corr(kine, flag_data);
 
@@ -1727,6 +1799,8 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
   
   if(eval.match_completeness_energy>0.1*eval.truth_energyInside && abs(eval.truth_nuPdg)==12 && eval.truth_isCC==1 && eval.truth_vtxInside==1) map_cuts_flag["nueCCinFV"] = true;
   else map_cuts_flag["nueCCinFV"] = false;
+  if(eval.match_completeness_energy>0.1*eval.truth_energyInside && eval.truth_nuPdg==12 && eval.truth_isCC==1 && eval.truth_vtxInside==1) map_cuts_flag["XsnueCCinFV"] = true;
+  else map_cuts_flag["XsnueCCinFV"] = false;
 
   if(eval.match_completeness_energy>0.1*eval.truth_energyInside && eval.truth_nuPdg==12 && eval.truth_isCC==1 && eval.truth_vtxInside==1) map_cuts_flag["RnueCCinFV"] = true;
   else map_cuts_flag["RnueCCinFV"] = false;
@@ -1864,6 +1938,15 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
     //nueCC FC
     if (flag_nueCC && flag_FC) return true;
     else return false;
+  } else if (ch_name == "nueCC_signal_FC_nueoverlay"    || ch_name == "nueCC_signal_PC_nueoverlay"
+         || ch_name ==  "nueCC_bkg_FC_overlay" || ch_name == "nueCC_bkg_PC_overlay" ){
+    bool pre_cut = flag_nueCC && eval.truth_nuEnergy<=4000 && eval.truth_nuEnergy > 200;
+    if      (ch_name == "nueCC_signal_FC_nueoverlay"     && pre_cut &&   flag_FC  &&   map_cuts_flag["XsnueCCinFV"])  { return true; }
+    else if (ch_name == "nueCC_signal_PC_nueoverlay"     && pre_cut && (!flag_FC) &&   map_cuts_flag["XsnueCCinFV"])  { return true; }
+    else if (ch_name == "nueCC_bkg_FC_overlay" && pre_cut &&   flag_FC  && (!map_cuts_flag["XsnueCCinFV"])) { return true; }
+    else if (ch_name == "nueCC_bkg_PC_overlay" && pre_cut && (!flag_FC) && (!map_cuts_flag["XsnueCCinFV"])) { return true; }
+    return false;    
+  // ------
   }else if (ch_name == "BG_nueCC_FC_ext_numi" || ch_name == "BG_nueCC_FC_dirt_numi" || ch_name =="nueCC_FC_numi"){
     //nueCC FC
     if (flag_nueCC && flag_FC) return true;
@@ -2646,6 +2729,21 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
   }else if (ch_name == "numuCC_Np_both_overlay" || ch_name == "BG_numuCC_Np_both_ext" || ch_name =="BG_numuCC_Np_both_dirt" || ch_name == "numuCC_Np_both_bnb") {
     if (flag_numuCC && (!flag_numuCC_1mu0p) && (!flag_nueCC) && (pfeval.reco_muonMomentum[3]>0)) return true;
     else return false;
+  }else if (ch_name == "numuCC_nonueCC_FC_overlay" || ch_name == "BG_numuCC_nonueCC_FC_ext" || ch_name =="BG_numuCC_nonueCC_FC_dirt" || ch_name == "numuCC_nonueCC_FC_bnb" || ch_name == "numuCC_nonueCC_FC_numu2nueoverlay"){
+    if (flag_numuCC && flag_FC && (!flag_nueCC)) return true;
+    else return false;
+  }else if (ch_name == "numuCC_nonueCC_PC_overlay" || ch_name == "BG_numuCC_nonueCC_PC_ext" || ch_name =="BG_numuCC_nonueCC_PC_dirt" || ch_name == "numuCC_nonueCC_PC_bnb" || ch_name == "numuCC_nonueCC_PC_numu2nueoverlay"){
+    if (flag_numuCC && (!flag_FC) && (!flag_nueCC)) return true;
+    else return false;
+  } else if (ch_name == "numuCC_signal_nonueCC_FC_overlay"    || ch_name == "numuCC_signal_nonueCC_PC_overlay"
+         || ch_name ==  "numuCC_bkg_nonueCC_FC_overlay" || ch_name == "numuCC_bkg_nonueCC_PC_overlay" ){
+    bool pre_cut = flag_numuCC && (!flag_nueCC) && eval.truth_nuEnergy<=4000 && eval.truth_nuEnergy > 200;
+    if      (ch_name == "numuCC_signal_nonueCC_FC_overlay"     && pre_cut &&   flag_FC  &&   map_cuts_flag["XsnumuCCinFV"])  { return true; }
+    else if (ch_name == "numuCC_signal_nonueCC_PC_overlay"     && pre_cut && (!flag_FC) &&   map_cuts_flag["XsnumuCCinFV"])  { return true; }
+    else if (ch_name == "numuCC_bkg_nonueCC_FC_overlay" && pre_cut &&   flag_FC  && (!map_cuts_flag["XsnumuCCinFV"])) { return true; }
+    else if (ch_name == "numuCC_bkg_nonueCC_PC_overlay" && pre_cut && (!flag_FC) && (!map_cuts_flag["XsnumuCCinFV"])) { return true; }
+    return false;    
+  // ------
   }else if (ch_name == "numuCC_nopi0_nonueCC_FC_overlay" || ch_name == "BG_numuCC_nopi0_nonueCC_FC_ext" || ch_name =="BG_numuCC_nopi0_nonueCC_FC_dirt" || ch_name == "numuCC_nopi0_nonueCC_FC_bnb" || ch_name == "numuCC_nopi0_nonueCC_FC_numu2nueoverlay"){
     if (flag_numuCC && flag_FC && (!flag_nueCC) && (!flag_cc_pi0)) return true;
     else return false;
@@ -2674,6 +2772,12 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
     if (flag_NC && flag_pi0 && (!flag_nueCC) ) return true;
     // if (flag_NC && flag_pi0 && (!flag_nueCC) && flag_FC && (!flag_0p) ) return true; // a test ...
     else return false;
+  } else if (ch_name == "NCpi0_signal_nonueCC_overlay"    || ch_name == "NCpi0_bkg_nonueCC_overlay"){
+    bool pre_cut = flag_NC && flag_pi0 && (!flag_nueCC) && eval.truth_nuEnergy<=4000 && eval.truth_nuEnergy > 200 && truth_pi0_energy > 0 && truth_pi0_energy <= 1500;
+    if      (ch_name == "NCpi0_signal_nonueCC_overlay" && pre_cut &&   map_cuts_flag["NCpi0inFV"])  { return true; }
+    else if (ch_name == "NCpi0_bkg_nonueCC_overlay" && pre_cut && (!map_cuts_flag["NCpi0inFV"])) { return true; }
+    return false;    
+  // ------
   }else if (ch_name == "NCpi0_nonueCC_overlay_numi" || ch_name == "BG_NCpi0_nonueCC_ext_numi" || ch_name == "BG_NCpi0_nonueCC_dirt_numi" || ch_name == "NCpi0_nonueCC_numi" || ch_name == "NCpi0_nonueCC_numu2nueoverlay_numi"){
     if (flag_NC && flag_pi0 && (!flag_nueCC) ) return true;
     else return false;
