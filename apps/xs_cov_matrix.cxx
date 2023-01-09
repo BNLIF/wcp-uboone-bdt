@@ -144,9 +144,9 @@ int main( int argc, char** argv )
   }
   
   // hack ...
-  outfile_name = "./hist_rootfiles/XsFlux/cov_xs.root";
-  if(run==18) outfile_name = "./hist_rootfiles/XsFlux/cov_rw.root";
-  if(run==19) outfile_name = "./hist_rootfiles/XsFlux/cov_rw_cor.root";
+  outfile_name = "../hist_rootfiles/XsFlux/cov_xs.root";
+  if(run==18) outfile_name = "../hist_rootfiles/XsFlux/cov_rw.root";
+  if(run==19) outfile_name = "../hist_rootfiles/XsFlux/cov_rw_cor.root";
   std::cout << outfile_name << std::endl;
   TMatrixD* cov_add_mat = cov.get_add_cov_matrix();
   // create a covariance matrix for bootstrapping ...
