@@ -268,6 +268,10 @@ int main( int argc, char** argv )
       T_PFeval->SetBranchStatus("muonvtx_diff",1);
       T_PFeval->SetBranchStatus("truth_nuIntType",1);
       T_PFeval->SetBranchStatus("truth_muonMomentum",1);
+      T_PFeval->SetBranchStatus("truth_pio_energy_1",1);
+      T_PFeval->SetBranchStatus("truth_pio_energy_2",1);
+      T_PFeval->SetBranchStatus("truth_pio_angle",1);
+      T_PFeval->SetBranchStatus("truth_NprimPio",1);
       if(T_PFeval->GetBranch("truth_mother")){//prevents throwing an error for the non _PF files
         T_PFeval->SetBranchStatus("truth_Ntrack",1);
         T_PFeval->SetBranchStatus("truth_pdg",1); 
