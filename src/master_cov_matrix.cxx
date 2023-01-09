@@ -1870,7 +1870,8 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
       if (it3 != disabled_ch_names.end()) continue;
       
       float val = get_kine_var(kine, eval, pfeval, tagger, false, var_name);
-      bool flag_pass = (get_cut_pass(ch_name, add_cut, false, eval, pfeval, tagger, kine) > 0);
+      int flag_passall = (get_cut_pass(ch_name, add_cut, false, eval, pfeval, tagger, kine));
+      bool flag_pass = flag_passall > 0;
       int signal_bin = -1;
       if (xs_signal_ch_names.find(ch_name) != xs_signal_ch_names.end()){
 	signal_bin = get_xs_signal_no(cut_file, map_cut_xs_bin, eval, pfeval, tagger, kine);
@@ -1878,7 +1879,8 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
 
       //  std::cout << flag_pass << " " << signal_bin << " " << no << std::endl;
       if (flag_pass || signal_bin !=-1) {
-	std::get<4>(event_info).insert(std::make_tuple(no, val, flag_pass, signal_bin));
+        if(flag_passall >= 0)
+          std::get<4>(event_info).insert(std::make_tuple(no, val, flag_pass, signal_bin));
 	//	if (no == 0) std::cout << "Xin: " << " " << flag_pass << " " << signal_bin << " " << eval.weight_cv * eval.weight_spline << " " <<eval.run << " " << eval.subrun << " " << eval.event << std::endl;
       }
       //if (flag_pass || (signal_bin !=-1 && is_preselection(eval))) std::get<4>(event_info).insert(std::make_tuple(no, val, flag_pass, signal_bin));
