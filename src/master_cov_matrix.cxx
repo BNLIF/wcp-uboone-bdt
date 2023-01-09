@@ -1726,6 +1726,10 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
   T_PFeval->SetBranchStatus("showervtx_diff",1);
   T_PFeval->SetBranchStatus("muonvtx_diff",1);
   T_PFeval->SetBranchStatus("truth_muonMomentum",1);
+  T_PFeval->SetBranchStatus("truth_pio_energy_1",1);
+  T_PFeval->SetBranchStatus("truth_pio_energy_2",1);
+  T_PFeval->SetBranchStatus("truth_pio_angle",1);
+  T_PFeval->SetBranchStatus("truth_NprimPio",1);
   if (pfeval.flag_NCDelta){
     
     T_PFeval->SetBranchStatus("truth_NCDelta",1);
