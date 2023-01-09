@@ -1870,7 +1870,7 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
       if (it3 != disabled_ch_names.end()) continue;
       
       float val = get_kine_var(kine, eval, pfeval, tagger, false, var_name);
-      bool flag_pass = get_cut_pass(ch_name, add_cut, false, eval, pfeval, tagger, kine);
+      bool flag_pass = (get_cut_pass(ch_name, add_cut, false, eval, pfeval, tagger, kine) > 0);
       int signal_bin = -1;
       if (xs_signal_ch_names.find(ch_name) != xs_signal_ch_names.end()){
 	signal_bin = get_xs_signal_no(cut_file, map_cut_xs_bin, eval, pfeval, tagger, kine);

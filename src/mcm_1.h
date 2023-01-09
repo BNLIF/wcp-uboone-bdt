@@ -762,10 +762,10 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
       if (it3 != disabled_ch_names.end()) continue;
       
       double val = get_kine_var(kine_cv, eval_cv, pfeval_cv, tagger_cv, false, var_name);
-      bool flag_pass = get_cut_pass(ch_name, add_cut, false, eval_cv, pfeval_cv, tagger_cv, kine_cv);
+      bool flag_pass = (get_cut_pass(ch_name, add_cut, false, eval_cv, pfeval_cv, tagger_cv, kine_cv) > 0);
 
       double val1 = get_kine_var(kine_det, eval_det, pfeval_det, tagger_det, false, var_name);
-      bool flag_pass1 = get_cut_pass(ch_name, add_cut, false, eval_det, pfeval_det, tagger_det, kine_det);
+      bool flag_pass1 = (get_cut_pass(ch_name, add_cut, false, eval_det, pfeval_det, tagger_det, kine_det) > 0);
       if (flag_pass || flag_pass1) {
 	std::get<4>(vec_events.at(i) ).insert(std::make_tuple(no, val, flag_pass, val1, flag_pass1));
       }

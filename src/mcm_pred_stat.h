@@ -854,7 +854,7 @@ void LEEana::CovMatrix::get_pred_events_info(TString input_filename, std::map<TS
       TString add_cut = std::get<6>(*it);
 
       double val = get_kine_var(kine, eval, pfeval, tagger, flag_data, var_name);
-      bool flag_pass = get_cut_pass(ch_name, add_cut, flag_data, eval, pfeval, tagger, kine);
+      bool flag_pass = (get_cut_pass(ch_name, add_cut, flag_data, eval, pfeval, tagger, kine) > 0);
 
       if (flag_pass) std::get<4>(vec_events.at(i)).insert(std::make_tuple(no, val, flag_pass));
       

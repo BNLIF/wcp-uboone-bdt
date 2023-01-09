@@ -34,7 +34,7 @@ namespace LEEana{
   double get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool flag_data, TString var_name="kine_reco_Enu");
   double get_truth_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, TString var_name); 
  
-  bool get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
+  int get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
   bool get_rw_cut_pass(TString cut, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
   double get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeval, KineInfo& kine, TaggerInfo& tagger, std::tuple< bool, std::vector< std::tuple<bool, TString, TString, double, double, bool, bool, bool,  std::vector<double>, std::vector<double>  > > > rw_info, bool flag_data=false);
   int get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bin, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
@@ -1678,7 +1678,7 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
   return -1;
 }
 
-bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine){
+int LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine){
 
   double truth_pi0_momentum = -1000.;
   double truth_pi0_costheta = -1000.;
@@ -1945,6 +1945,7 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
     else if (ch_name == "nueCC_signal_PC_nueoverlay"     && pre_cut && (!flag_FC) &&   map_cuts_flag["XsnueCCinFV"])  { return true; }
     else if (ch_name == "nueCC_bkg_FC_overlay" && pre_cut &&   flag_FC  && (!map_cuts_flag["XsnueCCinFV"])) { return true; }
     else if (ch_name == "nueCC_bkg_PC_overlay" && pre_cut && (!flag_FC) && (!map_cuts_flag["XsnueCCinFV"])) { return true; }
+    if ((ch_name == "nueCC_signal_FC_nueoverlay" || ch_name == "nueCC_signal_PC_nueoverlay") && !map_cuts_flag["XsnueCCinFV"]) { return -1; }
     return false;    
   // ------
   }else if (ch_name == "BG_nueCC_FC_ext_numi" || ch_name == "BG_nueCC_FC_dirt_numi" || ch_name =="nueCC_FC_numi"){
@@ -2742,6 +2743,7 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
     else if (ch_name == "numuCC_signal_nonueCC_PC_overlay"     && pre_cut && (!flag_FC) &&   map_cuts_flag["XsnumuCCinFV"])  { return true; }
     else if (ch_name == "numuCC_bkg_nonueCC_FC_overlay" && pre_cut &&   flag_FC  && (!map_cuts_flag["XsnumuCCinFV"])) { return true; }
     else if (ch_name == "numuCC_bkg_nonueCC_PC_overlay" && pre_cut && (!flag_FC) && (!map_cuts_flag["XsnumuCCinFV"])) { return true; }
+    if ((ch_name == "numuCC_signal_nonueCC_FC_overlay" || ch_name == "numuCC_signal_nonueCC_PC_overlay") && !map_cuts_flag["XsnumuCCinFV"]) { return -1; }
     return false;    
   // ------
   }else if (ch_name == "numuCC_nopi0_nonueCC_FC_overlay" || ch_name == "BG_numuCC_nopi0_nonueCC_FC_ext" || ch_name =="BG_numuCC_nopi0_nonueCC_FC_dirt" || ch_name == "numuCC_nopi0_nonueCC_FC_bnb" || ch_name == "numuCC_nopi0_nonueCC_FC_numu2nueoverlay"){
@@ -2776,6 +2778,7 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
     bool pre_cut = flag_NC && flag_pi0 && (!flag_nueCC) && eval.truth_nuEnergy<=4000 && eval.truth_nuEnergy > 200 && truth_pi0_energy > 0 && truth_pi0_energy <= 1500;
     if      (ch_name == "NCpi0_signal_nonueCC_overlay" && pre_cut &&   map_cuts_flag["NCpi0inFV"])  { return true; }
     else if (ch_name == "NCpi0_bkg_nonueCC_overlay" && pre_cut && (!map_cuts_flag["NCpi0inFV"])) { return true; }
+    if (ch_name == "NCpi0_signal_nonueCC_overlay" && !map_cuts_flag["NCpi0inFV"]) { return -1; }
     return false;    
   // ------
   }else if (ch_name == "NCpi0_nonueCC_overlay_numi" || ch_name == "BG_NCpi0_nonueCC_ext_numi" || ch_name == "BG_NCpi0_nonueCC_dirt_numi" || ch_name == "NCpi0_nonueCC_numi" || ch_name == "NCpi0_nonueCC_numu2nueoverlay_numi"){

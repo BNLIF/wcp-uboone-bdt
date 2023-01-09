@@ -323,7 +323,8 @@ int main( int argc, char** argv )
       // get kinematics variable ...
       double val = get_kine_var(kine, eval, pfeval, tagger, flag_data, var_name);
       // get pass or not
-      bool flag_pass = get_cut_pass(ch_name, add_cut, flag_data, eval, pfeval, tagger, kine);
+      int flag_passall = get_cut_pass(ch_name, add_cut, flag_data, eval, pfeval, tagger, kine);
+      bool flag_pass = flag_passall > 0;
       int signal_bin = -1;
       if (cov.is_xs_chname(ch_name))
 	signal_bin = get_xs_signal_no(cov.get_cut_file(), cov.get_map_cut_xs_bin(), eval, pfeval, tagger, kine);
@@ -346,7 +347,7 @@ int main( int argc, char** argv )
       }else{
        	if (signal_bin != -1){
        	  if (flag_pass) h1->Fill(val, weight_val);
-       	  h2->Fill(signal_bin, weight_val);
+       	  if (flag_passall >= 0) h2->Fill(signal_bin, weight_val);
        	  if (flag_pass) h3->Fill(val, signal_bin, weight_val);
        	}else{
        	  std::cout << "[convt-hist-xs] Something wrong: cut/channel mismatch !" << std::endl;

@@ -33,7 +33,9 @@ using namespace LEEana;
 
 int main( int argc, char** argv )
 {
-  
+
+  gROOT->SetBatch(1);
+
   if (argc < 2){
     std::cout << "./plot_hist -r[#run, 0 for all] -e[1 for standard, 2 for Bayesian, 3 for total uncertainty] -l[LEE strength, check against total uncertainty config] -s[path-to-external covmatrix file] -c[check MC and DATA spectra against the ones from external file]" << std::endl;
   }
