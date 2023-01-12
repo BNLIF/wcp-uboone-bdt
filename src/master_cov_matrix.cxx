@@ -73,7 +73,7 @@ LEEana::JointXsecHelper::JointXsecHelper(TString xs_ch_filename){
 int LEEana::JointXsecHelper::chWgtbyHistName(TString histname) const {
   
   auto element = std::find_if(fXsInfo.begin(), fXsInfo.end(), 
-                               [&](const auto& info){ return histname.Contains(info.first); }
+                               [&](const std::pair<TString, int>& info){ return histname.Contains(info.first); }
   );
   return element->second;
 }
