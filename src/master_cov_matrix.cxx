@@ -47,22 +47,22 @@ LEEana::JointXsecHelper::JointXsecHelper(TString xs_ch_filename){
   
   std::ifstream infile(xs_ch_filename);
   std::string line, item;
-  int ncols, row;
-  ncols = 0;
-  row = 0;
+  int row = 0;
   TString xs_signal_ch_name;
   int xs_chwgt;
  
   // TODO : readable comments 
   while(std::getline(infile, line)){
     std::stringstream ss(line);
+    int ncols = 0;
     while(ss >> item) ncols++;
+    std::stringstream ss2(line);
     if(ncols == 1){ 
       xs_chwgt = row > 0 ? 0 : 1;
-      infile >> xs_signal_ch_name;
+      ss2 >> xs_signal_ch_name;
     }
     else  
-      infile >> xs_signal_ch_name >> xs_chwgt;
+      ss2 >> xs_signal_ch_name >> xs_chwgt;
     row++;
     if (xs_signal_ch_name == "End") break;
     fXsInfo.insert(std::make_pair(xs_signal_ch_name, xs_chwgt));
@@ -975,7 +975,6 @@ void LEEana::CovMatrix::gen_xs_cov_matrix(int run, std::map<int, std::tuple<TH1F
     (*vec_mean)(i) = 0;
   }
   fill_xs_histograms(map_passed_events, map_histoname_infos, map_no_histoname, map_histoname_hists);
-
   
   // merge histograms according to POTs ...
   for (auto it = map_pred_covch_histos.begin(); it!=map_pred_covch_histos.end();it++){
@@ -1049,8 +1048,7 @@ void LEEana::CovMatrix::gen_xs_cov_matrix(int run, std::map<int, std::tuple<TH1F
 	  htemp3->Add(hmc3,ratio);
 	  //std::cout << hmc1->GetSum() << " " << ratio << std::endl;
 	}
-	
-     	//	std::cout << covch << " " << histoname << " " << ratio << " " << data_pot << std::endl;
+        // std::cout << covch << " " << histoname << " " << xs_chwgt << " " << ratio << " " << data_pot << std::endl;
       }
       
       hpred->Add(htemp);
@@ -1089,8 +1087,8 @@ void LEEana::CovMatrix::gen_xs_cov_matrix(int run, std::map<int, std::tuple<TH1F
       }
     }
   
-    mat_R->NormByRow(*vec_signal, "D");  
-  }
+  } // files
+  mat_R->NormByRow(*vec_signal, "D"); 
 
   {
     // add additional uncertainties ...
@@ -1166,7 +1164,7 @@ void LEEana::CovMatrix::fill_pred_R_signal(int run, TMatrixD* mat_R, TVectorD* v
       	}else{
       	  temp_map_mc_acc_pot[period] += mc_pot;
 	}
-        std::cout << covch << " " << histoname << " " << input_filename << " " << mc_pot << " " << period << std::endl;
+        // std::cout << covch << " " << histoname << " " << input_filename << " " << mc_pot << " " << period << std::endl;
       }
       if (hsigma ==0 ) continue;
       
