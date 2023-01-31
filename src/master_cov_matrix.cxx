@@ -1198,6 +1198,7 @@ void LEEana::CovMatrix::fill_pred_R_signal(int run, TMatrixD* mat_R, TVectorD* v
       int bin = std::round(hsigma->GetBinCenter(k+1));
       (*vec_signal)(k) += hsigma->GetBinContent(k+1)/map_xs_bin_constant[bin];
     }
+    // vec_signal->Print();
     // mat_R
     // loop real signal bin ...
     for (int k=0;k!=hsigma->GetNbinsX();k++){

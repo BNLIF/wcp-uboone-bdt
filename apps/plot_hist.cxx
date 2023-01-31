@@ -1218,12 +1218,12 @@ int main( int argc, char** argv )
         hnumuCCinFV->SetLineColor(kAzure+6);
         hnumuCCinFV->SetLineWidth(1);
 
-        hstack[obschannel-1]->Add(hRnumuCCinFV); 
-        legend[obschannel-1]->AddEntry(hRnumuCCinFV, Form("#nu_{#mu} CC in FV, %.1f", hRnumuCCinFV->Integral()), "F"); 
-        hRnumuCCinFV->SetFillStyle(1001);
-        hRnumuCCinFV->SetFillColorAlpha(kAzure+6, 0.5);
-        hRnumuCCinFV->SetLineColor(kAzure+6);
-        hRnumuCCinFV->SetLineWidth(1);
+        // hstack[obschannel-1]->Add(hRnumuCCinFV);
+        // legend[obschannel-1]->AddEntry(hRnumuCCinFV, Form("#nu_{#mu} CC in FV, %.1f", hRnumuCCinFV->Integral()), "F");
+        // hRnumuCCinFV->SetFillStyle(1001);
+        // hRnumuCCinFV->SetFillColorAlpha(kAzure+6, 0.5);
+        // hRnumuCCinFV->SetLineColor(kAzure+6);
+        // hRnumuCCinFV->SetLineWidth(1);
 
         hstack[obschannel-1]->Add(hAnumuCCinFV); 
         legend[obschannel-1]->AddEntry(hAnumuCCinFV, Form("Anti #nu_{#mu} CC in FV, %.1f", hAnumuCCinFV->Integral()), "F"); 

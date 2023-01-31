@@ -350,6 +350,7 @@ int main( int argc, char** argv )
        	  if (flag_passall >= 0) h2->Fill(signal_bin, weight_val);
        	  if (flag_pass) h3->Fill(val, signal_bin, weight_val);
        	}else{
+          std::cout << num << " " << signal_bin << " " << ch_name << " " << flag_pass << " " << flag_passall << std::endl;
        	  std::cout << "[convt-hist-xs] Something wrong: cut/channel mismatch !" << std::endl;
        	}
       } // else
