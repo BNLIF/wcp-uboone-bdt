@@ -38,6 +38,7 @@ TMatrixD Matrix_C(Int_t n, Int_t type)
     if      (type==332) { return C3_3D(2);}
     else if (type==333) { return C3_3D(3);}
     else if (type==22 || type==32) { dim_edges = { 0,  3,  7, 11, 14, 18, 22, 26, 31, 36}; }  //2D edges between 1D dimension slices
+    else if (type==2) { dim_edges = { 0, 4, 8, 11 }; }
 /*
     else if (type==23 || type==33) { dim_edges = { 0,  3,  6, 10, 13, 16, 19, 22, 25,
                                                   28, 31, 35, 39, 42, 45, 49, 53, 57,
@@ -162,7 +163,9 @@ TVectorD WienerSVD(TMatrixD Response, TVectorD Signal, TVectorD Measure, TMatrix
     TMatrixD C = C0;
     C0.Invert();
     TMatrixD C_inv = C0;
+    // Signal.Print();
     Signal = C*Signal;
+    // Signal.Print();
     R = R*C_inv;
   
     // SVD decomposition of R 
@@ -191,6 +194,7 @@ TVectorD WienerSVD(TMatrixD Response, TVectorD Signal, TVectorD Measure, TMatrix
     double signal_ratio = 2.0;
 
     TVectorD S = V_t*Signal;
+    // S.Print();
     // Wiener Filter 
     TMatrixD W(n, n);
     TMatrixD W0(n, n);
@@ -212,8 +216,8 @@ TVectorD WienerSVD(TMatrixD Response, TVectorD Signal, TVectorD Measure, TMatrix
                 }
                 WF(i) = D(i)*D(i)*W(i, j);
                 W0(i, j) = WF(i); 
-                }
-                else{
+              }
+              else{
                 W(i, j) = 1.0/D(i)/D(i);
                 WF(i) = 1.0; // = W(i, j)*D(i)*D(i);
                 W0(i, j) = WF(i);
@@ -221,8 +225,11 @@ TVectorD WienerSVD(TMatrixD Response, TVectorD Signal, TVectorD Measure, TMatrix
             }
         }
     }
-
+    
+    TMatrixD test = C_inv*V*W*D_t*U_t;
+    // W.Print();
     TVectorD unfold = C_inv*V*W*D_t*U_t*M;
+    // unfold.Print();
     AddSmear = C_inv*V*W0*V_t*C;
     // covariance matrix of the unfolded spectrum
     //TMatrixD covRotation = C_inv*V*W*D_t*U_t*Q;
