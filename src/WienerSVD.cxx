@@ -38,7 +38,8 @@ TMatrixD Matrix_C(Int_t n, Int_t type)
     if      (type==332) { return C3_3D(2);}
     else if (type==333) { return C3_3D(3);}
     else if (type==22 || type==32) { dim_edges = { 0,  3,  7, 11, 14, 18, 22, 26, 31, 36}; }  //2D edges between 1D dimension slices
-    else if (type==2) { dim_edges = { 0, 4, 8, 11 }; }
+    // else if (type==2) { dim_edges = { 0, 4, 8, 11 }; }
+    else if (type==2) { dim_edges = { 0, 10, 20 }; }
 /*
     else if (type==23 || type==33) { dim_edges = { 0,  3,  6, 10, 13, 16, 19, 22, 25,
                                                   28, 31, 35, 39, 42, 45, 49, 53, 57,
