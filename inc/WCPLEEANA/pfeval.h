@@ -33,6 +33,8 @@ struct PFevalInfo{
   Int_t mcflux_evtno;
   Int_t mcflux_ndecay;
   Int_t mcflux_ntype;
+  Int_t mcflux_ptype;
+  Int_t mcflux_tptype;
   Float_t mcflux_nuEnergy;
   Float_t mcflux_vx;
   Float_t mcflux_vy;
@@ -231,6 +233,8 @@ void LEEana::clear_pfeval_info(PFevalInfo& tagger_info){
   tagger_info.mcflux_evtno=0;
   tagger_info.mcflux_ndecay=0;
   tagger_info.mcflux_ntype=0;
+  tagger_info.mcflux_ptype=0;
+  tagger_info.mcflux_tptype=0;
   tagger_info.mcflux_nuEnergy=0;
   tagger_info.mcflux_vx=0;
   tagger_info.mcflux_vy=0;
@@ -323,20 +327,6 @@ void LEEana::set_tree_address(TTree *tree0, PFevalInfo& tagger_info, int flag){
         
     if (flag==1){
       tree0->SetBranchAddress("truth_showerMomentum",&tagger_info.truth_showerMomentum[0]);
-      
-      tree0->SetBranchAddress("mcflux_run",&tagger_info.mcflux_run);
-      tree0->SetBranchAddress("mcflux_evtno",&tagger_info.mcflux_evtno);
-      tree0->SetBranchAddress("mcflux_ndecay",&tagger_info.mcflux_ndecay);
-      tree0->SetBranchAddress("mcflux_ntype",&tagger_info.mcflux_ntype);
-      tree0->SetBranchAddress("mcflux_nuEnergy",&tagger_info.mcflux_nuEnergy);
-      tree0->SetBranchAddress("mcflux_vx",&tagger_info.mcflux_vx);
-      tree0->SetBranchAddress("mcflux_vy",&tagger_info.mcflux_vy);
-      tree0->SetBranchAddress("mcflux_vz",&tagger_info.mcflux_vz);
-      tree0->SetBranchAddress("mcflux_genx",&tagger_info.mcflux_genx);
-      tree0->SetBranchAddress("mcflux_geny",&tagger_info.mcflux_geny);
-      tree0->SetBranchAddress("mcflux_genz",&tagger_info.mcflux_genz);
-      tree0->SetBranchAddress("mcflux_dk2gen",&tagger_info.mcflux_dk2gen);
-      tree0->SetBranchAddress("mcflux_gen2vtx",&tagger_info.mcflux_gen2vtx);
 
       tree0->SetBranchAddress("truth_nuScatType",&tagger_info.truth_nuScatType);
       
@@ -376,6 +366,22 @@ void LEEana::set_tree_address(TTree *tree0, PFevalInfo& tagger_info, int flag){
     tree0->SetBranchAddress("truth_vtxZ", &tagger_info.truth_vtxZ);
     tree0->SetBranchAddress("truth_nuTime", &tagger_info.truth_nuTime);
     tree0->SetBranchAddress("truth_nuIntType", &tagger_info.truth_nuIntType);
+    
+    tree0->SetBranchAddress("mcflux_run",&tagger_info.mcflux_run);
+    tree0->SetBranchAddress("mcflux_evtno",&tagger_info.mcflux_evtno);
+    tree0->SetBranchAddress("mcflux_ndecay",&tagger_info.mcflux_ndecay);
+    tree0->SetBranchAddress("mcflux_ntype",&tagger_info.mcflux_ntype);
+    tree0->SetBranchAddress("mcflux_ptype",&tagger_info.mcflux_ptype);
+    tree0->SetBranchAddress("mcflux_tptype",&tagger_info.mcflux_tptype);
+    tree0->SetBranchAddress("mcflux_nuEnergy",&tagger_info.mcflux_nuEnergy);
+    tree0->SetBranchAddress("mcflux_vx",&tagger_info.mcflux_vx);
+    tree0->SetBranchAddress("mcflux_vy",&tagger_info.mcflux_vy);
+    tree0->SetBranchAddress("mcflux_vz",&tagger_info.mcflux_vz);
+    tree0->SetBranchAddress("mcflux_genx",&tagger_info.mcflux_genx);
+    tree0->SetBranchAddress("mcflux_geny",&tagger_info.mcflux_geny);
+    tree0->SetBranchAddress("mcflux_genz",&tagger_info.mcflux_genz);
+    tree0->SetBranchAddress("mcflux_dk2gen",&tagger_info.mcflux_dk2gen);
+    tree0->SetBranchAddress("mcflux_gen2vtx",&tagger_info.mcflux_gen2vtx);
 
     if (tree0->GetBranch("truth_NCDelta")){
       tagger_info.flag_NCDelta = true;
@@ -505,6 +511,21 @@ void LEEana::put_tree_address(TTree *tree0, PFevalInfo& tagger_info, int flag){
     tree0->Branch("truth_vtxZ", &tagger_info.truth_vtxZ,"data/F");
     tree0->Branch("truth_nuTime", &tagger_info.truth_nuTime,"data/F");
     tree0->Branch("truth_nuIntType", &tagger_info.truth_nuIntType,"data/I");
+    tree0->Branch("mcflux_run",&tagger_info.mcflux_run,"mcflux_run/I");
+    tree0->Branch("mcflux_evtno",&tagger_info.mcflux_evtno,"mcflux_evtno/I");
+    tree0->Branch("mcflux_ndecay",&tagger_info.mcflux_ndecay,"mcflux_ndecay/I");
+    tree0->Branch("mcflux_ntype",&tagger_info.mcflux_ntype,"mcflux_ntype/I");
+    tree0->Branch("mcflux_ptype",&tagger_info.mcflux_ptype,"mcflux_ptype/I");
+    tree0->Branch("mcflux_tptype",&tagger_info.mcflux_tptype,"mcflux_tptype/I");
+    tree0->Branch("mcflux_nuEnergy",&tagger_info.mcflux_nuEnergy,"mcflux_nuEnergy/F");
+    tree0->Branch("mcflux_vx", &tagger_info.mcflux_vx,"mcflux_vx/F");
+    tree0->Branch("mcflux_vy", &tagger_info.mcflux_vy,"mcflux_vy/F");
+    tree0->Branch("mcflux_vz", &tagger_info.mcflux_vz,"mcflux_vz/F");
+    tree0->Branch("mcflux_genx", &tagger_info.mcflux_genx, "mcflux_genx/F");
+    tree0->Branch("mcflux_geny", &tagger_info.mcflux_geny, "mcflux_geny/F");
+    tree0->Branch("mcflux_genz", &tagger_info.mcflux_genz, "mcflux_genz/F");
+    tree0->Branch("mcflux_dk2gen", &tagger_info.mcflux_dk2gen, "mcflux_dk2gen/F");
+    tree0->Branch("mcflux_gen2vtx", &tagger_info.mcflux_gen2vtx, "mcflux_gen2vtx/F");
 
     if (tagger_info.flag_NCDelta){
       tree0->Branch("truth_NCDelta",&tagger_info.truth_NCDelta,"truth_NCDelta/I");
@@ -528,21 +549,8 @@ void LEEana::put_tree_address(TTree *tree0, PFevalInfo& tagger_info, int flag){
     
     if (flag==1){
       tree0->Branch("truth_showerMomentum",&tagger_info.truth_showerMomentum[0],"truth_showerMomentum[4]/F");
-      tree0->Branch("mcflux_run",&tagger_info.mcflux_run,"mcflux_run/I");
-      tree0->Branch("mcflux_evtno",&tagger_info.mcflux_evtno,"mcflux_evtno/I");
-      tree0->Branch("mcflux_ndecay",&tagger_info.mcflux_ndecay,"mcflux_ndecay/I");
-      tree0->Branch("mcflux_ntype",&tagger_info.mcflux_ntype,"mcflux_ntype/I");
       tree0->Branch("truth_nuScatType",&tagger_info.truth_nuScatType,"truth_nuScatType/I");
       
-      tree0->Branch("mcflux_nuEnergy",&tagger_info.mcflux_nuEnergy,"mcflux_nuEnergy/F");
-      tree0->Branch("mcflux_vx", &tagger_info.mcflux_vx,"mcflux_vx/F");
-      tree0->Branch("mcflux_vy", &tagger_info.mcflux_vy,"mcflux_vy/F");
-      tree0->Branch("mcflux_vz", &tagger_info.mcflux_vz,"mcflux_vz/F");
-      tree0->Branch("mcflux_genx", &tagger_info.mcflux_genx, "mcflux_genx/F");
-      tree0->Branch("mcflux_geny", &tagger_info.mcflux_geny, "mcflux_geny/F");
-      tree0->Branch("mcflux_genz", &tagger_info.mcflux_genz, "mcflux_genz/F");
-      tree0->Branch("mcflux_dk2gen", &tagger_info.mcflux_dk2gen, "mcflux_dk2gen/F");
-      tree0->Branch("mcflux_gen2vtx", &tagger_info.mcflux_gen2vtx, "mcflux_gen2vtx/F");
       tree0->Branch("truth_nu_pos", &tagger_info.truth_nu_pos[0],"truth_nu_pos[4]/F");
       tree0->Branch("truth_nu_momentum", &tagger_info.truth_nu_momentum[0], "truth_nu_momentum[4]/F");
     }

@@ -554,6 +554,12 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
   T_PFeval_cv->SetBranchStatus("showervtx_diff",1);
   T_PFeval_cv->SetBranchStatus("muonvtx_diff",1);
   T_PFeval_cv->SetBranchStatus("truth_muonMomentum",1);
+  T_PFeval_cv->SetBranchStatus("mcflux_ntype",1);
+  T_PFeval_cv->SetBranchStatus("mcflux_ptype",1);
+  T_PFeval_cv->SetBranchStatus("mcflux_tptype",1);
+  T_PFeval_cv->SetBranchStatus("mcflux_dk2gen",1);
+  T_PFeval_cv->SetBranchStatus("mcflux_gen2vtx",1);
+  T_PFeval_cv->SetBranchStatus("mcflux_ndecay",1);
   if (pfeval_cv.flag_NCDelta){
     
     T_PFeval_cv->SetBranchStatus("truth_NCDelta",1);
@@ -570,10 +576,6 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
     // oscillation formula ...
     T_PFeval_cv->SetBranchStatus("truth_nu_momentum",1);
     T_PFeval_cv->SetBranchStatus("neutrino_type",1);
-    T_PFeval_cv->SetBranchStatus("mcflux_ntype",1);
-    T_PFeval_cv->SetBranchStatus("mcflux_dk2gen",1);
-    T_PFeval_cv->SetBranchStatus("mcflux_gen2vtx",1);
-    T_PFeval_cv->SetBranchStatus("mcflux_ndecay",1);
   }
   if (T_PFeval_cv->GetBranch("truth_pdg")){
      T_PFeval_cv->SetBranchStatus("truth_Ntrack",1);

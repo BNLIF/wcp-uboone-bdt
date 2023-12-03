@@ -134,6 +134,12 @@ int main( int argc, char** argv )
       T_PFeval->SetBranchStatus("muonvtx_diff",1);
       T_PFeval->SetBranchStatus("truth_nuIntType",1);
       T_PFeval->SetBranchStatus("truth_muonMomentum",1);
+      T_PFeval->SetBranchStatus("mcflux_ntype",1);
+      T_PFeval->SetBranchStatus("mcflux_ptype",1);
+      T_PFeval->SetBranchStatus("mcflux_tptype",1);
+      T_PFeval->SetBranchStatus("mcflux_dk2gen",1);
+      T_PFeval->SetBranchStatus("mcflux_gen2vtx",1);
+      T_PFeval->SetBranchStatus("mcflux_ndecay",1);
       
   }
   if (pfeval.flag_NCDelta){
@@ -155,10 +161,6 @@ int main( int argc, char** argv )
       // oscillation formula ...
       T_PFeval->SetBranchStatus("truth_nu_momentum",1);
       T_PFeval->SetBranchStatus("neutrino_type",1);
-      T_PFeval->SetBranchStatus("mcflux_ntype",1);
-      T_PFeval->SetBranchStatus("mcflux_dk2gen",1);
-      T_PFeval->SetBranchStatus("mcflux_gen2vtx",1);
-      T_PFeval->SetBranchStatus("mcflux_ndecay",1);
     }
   }
   
