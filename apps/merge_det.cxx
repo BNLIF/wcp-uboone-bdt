@@ -688,6 +688,8 @@ int main( int argc, char** argv )
   
   T_eval_cv->SetBranchStatus("weight_spline",1);
   T_eval_cv->SetBranchStatus("weight_cv",1);
+  T_eval_cv->SetBranchStatus("weight_flugg",1);
+  T_eval_cv->SetBranchStatus("weight_ppfx",1);
   T_eval_cv->SetBranchStatus("weight_lee",1);
   T_eval_cv->SetBranchStatus("weight_change",1);
   // MC enable truth information ...
@@ -828,6 +830,8 @@ int main( int argc, char** argv )
   
   T_eval_det->SetBranchStatus("weight_spline",1);
   T_eval_det->SetBranchStatus("weight_cv",1);
+  T_eval_det->SetBranchStatus("weight_flugg",1);
+  T_eval_det->SetBranchStatus("weight_ppfx",1);
   T_eval_det->SetBranchStatus("weight_lee",1);
   T_eval_det->SetBranchStatus("weight_change",1);
   // MC enable truth information ...

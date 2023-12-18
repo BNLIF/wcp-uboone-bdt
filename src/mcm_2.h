@@ -656,6 +656,8 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
   
   T_eval->SetBranchStatus("weight_spline",1);
   T_eval->SetBranchStatus("weight_cv",1);
+  T_eval->SetBranchStatus("weight_flugg",1);
+  T_eval->SetBranchStatus("weight_ppfx",1);
   T_eval->SetBranchStatus("weight_lee",1);
   T_eval->SetBranchStatus("weight_change",1);
   // MC enable truth information ...

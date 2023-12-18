@@ -67,6 +67,8 @@ namespace LEEana{
     Float_t match_purity_xy;
     Float_t weight_spline;
     Float_t weight_cv;
+    Float_t weight_flugg;
+    Float_t weight_ppfx;
     Float_t weight_lee;
     
     Bool_t weight_change;
@@ -195,6 +197,8 @@ void LEEana::set_tree_address(TTree *tree0, EvalInfo& eval_info, int flag){
     tree0->SetBranchAddress("match_purity_xy", &eval_info.match_purity_xy);
     tree0->SetBranchAddress("weight_spline", &eval_info.weight_spline);
     tree0->SetBranchAddress("weight_cv", &eval_info.weight_cv);
+    tree0->SetBranchAddress("weight_flugg", &eval_info.weight_flugg);
+    tree0->SetBranchAddress("weight_ppfx", &eval_info.weight_ppfx);
     tree0->SetBranchAddress("weight_lee", &eval_info.weight_lee);
     
     if (tree0->GetBranch("weight_change")) tree0->SetBranchAddress("weight_change",&eval_info.weight_change);
@@ -269,6 +273,8 @@ void LEEana::put_tree_address(TTree *tree0, EvalInfo& eval_info, int flag){
     tree0->Branch("match_purity_xy", &eval_info.match_purity_xy,"data/F");
     tree0->Branch("weight_spline", &eval_info.weight_spline,"data/F");
     tree0->Branch("weight_cv", &eval_info.weight_cv,"data/F");
+    tree0->Branch("weight_flugg", &eval_info.weight_flugg,"data/F");
+    tree0->Branch("weight_ppfx", &eval_info.weight_ppfx,"data/F");
     tree0->Branch("weight_lee", &eval_info.weight_lee,"data/F");
     
     tree0->Branch("weight_change",&eval_info.weight_change,"data/O");

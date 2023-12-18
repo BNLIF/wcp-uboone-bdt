@@ -496,6 +496,8 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
   
   T_eval_cv->SetBranchStatus("weight_spline",1);
   T_eval_cv->SetBranchStatus("weight_cv",1);
+  T_eval_cv->SetBranchStatus("weight_flugg",1);
+  T_eval_cv->SetBranchStatus("weight_ppfx",1);
   T_eval_cv->SetBranchStatus("weight_lee",1);
   T_eval_cv->SetBranchStatus("weight_change",1);
   // MC enable truth information ...
@@ -645,6 +647,8 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
   
   T_eval_det->SetBranchStatus("weight_spline",1);
   T_eval_det->SetBranchStatus("weight_cv",1);
+  T_eval_det->SetBranchStatus("weight_flugg",1);
+  T_eval_det->SetBranchStatus("weight_ppfx",1);
   T_eval_det->SetBranchStatus("weight_lee",1);
   T_eval_det->SetBranchStatus("weight_change",1);
   // MC enable truth information ...
