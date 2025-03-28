@@ -12,6 +12,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TH1F.h"
 
 #include "WCPLEEANA/tagger.h"
 
@@ -24,6 +25,7 @@ using namespace LEEana;
 #include "WCPLEEANA/pot.h"
 #include "WCPLEEANA/pfeval.h"
 #include "WCPLEEANA/kine.h"
+#include "WCPLEEANA/space.h"
 
 int main( int argc, char** argv )
 {
@@ -53,8 +55,24 @@ int main( int argc, char** argv )
 
   if (T_eval_cv->GetBranch("weight_cv")) flag_data =false;
   
+  bool flag_spacepoints = false;
+  TTree* T_space_cv;
+  TH1F *H_time, *H_maxH, *H_t0_Beam, *H_TimeVsPh;
+  if(file1->Get("wcpselection/T_spacepoints")){
+    T_space_cv = (TTree*)file1->Get("wcpselection/T_spacepoints");
+    H_time = (TH1F*)file1->Get("wcpselection/H_time");
+    H_maxH = (TH1F*)file1->Get("wcpselection/H_maxH");
+    H_t0_Beam = (TH1F*)file1->Get("wcpselection/H_t0_Beam");
+    H_TimeVsPh = (TH1F*)file1->Get("wcpselection/H_TimeVsPh");
+    H_time->SetDirectory(0);
+    H_maxH->SetDirectory(0);
+    H_t0_Beam->SetDirectory(0);
+    H_TimeVsPh->SetDirectory(0);
+    flag_spacepoints = true;
+  }
   
 
+  SpaceInfo space_cv;
   EvalInfo eval_cv;
   eval_cv.file_type = new std::string();
   POTInfo pot_cv;
@@ -334,7 +352,11 @@ int main( int argc, char** argv )
   
   set_tree_address(T_pot_cv, pot_cv);
   set_tree_address(T_KINEvars_cv, kine_cv);
-  
+
+  if(flag_spacepoints){
+    set_tree_address(T_space_cv, space_cv);
+  }
+
   T_BDTvars_cv->SetBranchStatus("*",0);
   T_BDTvars_cv->SetBranchStatus("numu_cc_flag",1);
   T_BDTvars_cv->SetBranchStatus("numu_score",1);
@@ -560,6 +582,7 @@ int main( int argc, char** argv )
   TTree *t3_cv = new TTree("T_PFeval", "T_PFeval");
   TTree *t5_cv = new TTree("T_KINEvars", "T_KINEvars");
   TTree *t4_cv = new TTree("T_BDTvars","T_BDTvars");
+  TTree *t6_cv = new TTree("T_spacepoints","T_spacepoints");
 
   put_tree_address(t4_cv, tagger_cv,2);
 
@@ -575,11 +598,15 @@ int main( int argc, char** argv )
   
   put_tree_address(t2_cv, pot_cv);
   put_tree_address(t5_cv, kine_cv);
-  
+ 
   T_eval_cv->SetBranchStatus("*",1);
   T_PFeval_cv->SetBranchStatus("*",1);
   T_BDTvars_cv->SetBranchStatus("*",1);
   T_KINEvars_cv->SetBranchStatus("*",1);
+  if(flag_spacepoints){
+    put_tree_address(t6_cv, space_cv);
+    T_space_cv->SetBranchStatus("*",1);
+  }
 
   std::cout << "start filling" << std::endl;
   
@@ -598,11 +625,15 @@ int main( int argc, char** argv )
     T_KINEvars_cv->GetEntry(*it);
     T_PFeval_cv->GetEntry(*it);
     T_BDTvars_cv->GetEntry(*it);
+    if(flag_spacepoints)
+      T_space_cv->GetEntry(*it);
     
     t1_cv->Fill();
     t3_cv->Fill();
     t4_cv->Fill();
     t5_cv->Fill();
+    if(flag_spacepoints)
+      t6_cv->Fill();
   }
 
   double cv_pot=0;
@@ -633,6 +664,16 @@ int main( int argc, char** argv )
   std::cout << out_file << std::endl;
   std::cout << "Events: " << t1_cv->GetEntries()<<"/"<<T_eval_cv->GetEntries() << std::endl;
   std::cout << "POT:    " << cv1_pot << " " << cv_pot << std::endl;
+  
+  // delete useless TTree
+  if(!flag_spacepoints)
+    delete t6_cv;
+  else{
+    H_time->Write();
+    H_maxH->Write();
+    H_t0_Beam->Write();
+    H_TimeVsPh->Write();
+  }
   
   file3->Write();
   file3->Close();

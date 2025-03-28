@@ -34,6 +34,7 @@ using namespace LEEana;
 #include "WCPLEEANA/pot.h"
 #include "WCPLEEANA/pfeval.h"
 #include "WCPLEEANA/kine.h"
+#include "WCPLEEANA/space.h"
 
 int main( int argc, char** argv )
 {
@@ -113,8 +114,22 @@ int main( int argc, char** argv )
   TTree *T_pot = (TTree*)file1->Get("wcpselection/T_pot");
   TTree *T_PFeval = (TTree*)file1->Get("wcpselection/T_PFeval");
   TTree *T_KINEvars = (TTree*)file1->Get("wcpselection/T_KINEvars");
-
   
+  bool flag_spacepoints = false;
+  TTree* T_space;
+  TH1F *H_time, *H_maxH, *H_t0_Beam, *H_TimeVsPh;
+  if(file1->Get("wcpselection/T_spacepoints")){
+    T_space = (TTree*)file1->Get("wcpselection/T_spacepoints");
+    H_time = (TH1F*)file1->Get("wcpselection/H_time");
+    H_maxH = (TH1F*)file1->Get("wcpselection/H_maxH");
+    H_t0_Beam = (TH1F*)file1->Get("wcpselection/H_t0_Beam");
+    H_TimeVsPh = (TH1F*)file1->Get("wcpselection/H_TimeVsPh");
+    H_time->SetDirectory(0);
+    H_maxH->SetDirectory(0);
+    H_t0_Beam->SetDirectory(0);
+    H_TimeVsPh->SetDirectory(0);
+    flag_spacepoints = true;
+  }
 
   
   if (T_eval->GetBranch("weight_cv")) flag_data =false;
@@ -678,6 +693,7 @@ int main( int argc, char** argv )
   TTree *t2 = new TTree("T_pot","T_pot");
   TTree *t3 = new TTree("T_PFeval", "T_PFeval");
   TTree *t5 = new TTree("T_KINEvars", "T_KINEvars");
+  TTree *t6 = new TTree("T_spacepoints", "T_spacepoints");
   //TTree *t1 = T_eval->CloneTree(-1,"");
   //TTree *t2 = T_pot->CloneTree(-1,"");
   //TTree *t3 = T_PFeval->CloneTree(-1,"");
@@ -686,7 +702,8 @@ int main( int argc, char** argv )
   
   EvalInfo eval;
   eval.file_type = new std::string();
-  
+
+  SpaceInfo space;
   POTInfo pot;
   TaggerInfo tagger;
   PFevalInfo pfeval;
@@ -978,7 +995,12 @@ int main( int argc, char** argv )
   set_tree_address(T_KINEvars, kine);
   put_tree_address(t5, kine);
   
-  
+  if(flag_spacepoints){
+    // no run info here, we match it later on
+    set_tree_address(T_space, space, false);
+    put_tree_address(t6, space);
+  }
+
   //  bool match_isFC;
   //  T_eval->SetBranchAddress("match_isFC",&match_isFC);
   //  T_KINEvars->SetBranchAddress("kine_reco_Enu",&tagger.kine_reco_Enu);
@@ -3060,6 +3082,9 @@ int main( int argc, char** argv )
     T_eval->GetEntry(i); tagger.match_isFC = eval.match_isFC;
     T_KINEvars->GetEntry(i); tagger.kine_reco_Enu = kine.kine_reco_Enu; temp_kine_pio_flag = kine.kine_pio_flag;
     T_PFeval->GetEntry(i);
+    if(flag_spacepoints){
+      T_space->GetEntry(i); space.run = eval.run; space.subrun = eval.subrun; space.event = eval.event;
+    }
 
     if (remove_set.find(std::make_pair(eval.run, eval.subrun)) != remove_set.end()) continue;
     
@@ -3163,6 +3188,8 @@ int main( int argc, char** argv )
     t1->Fill();
     t3->Fill();
     t5->Fill();
+    if(flag_spacepoints)
+      t6->Fill();
 
     //    std::cout << pfeval.reco_daughters->size() << std::endl;
     //    break;
@@ -3194,16 +3221,23 @@ int main( int argc, char** argv )
     t2->Fill();
   }
 
-
   for (auto it = remove_set.begin(); it!= remove_set.end(); it++){
     std::cout <<"remove  run:" << it->first << " subrun:" << it->second << std::endl;
   }
-  
+
+  // delete useless TTree
+  if(!flag_spacepoints)
+    delete t6;
+  else{
+    H_time->Write();
+    H_maxH->Write();
+    H_t0_Beam->Write();
+    H_TimeVsPh->Write();
+  }
+
   file2->Write();
   file2->Close();
   
   return 0;
 
-  
-  
 }
