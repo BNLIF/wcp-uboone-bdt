@@ -10,14 +10,25 @@ struct SpaceInfo{
   std::vector<double> *Trec_spacepoints_y;
   std::vector<double> *Trec_spacepoints_z;
   std::vector<double> *Trec_spacepoints_q;
+  std::vector<double> *Trec_spacepoints_cluster_id;
+  std::vector<double> *Trec_spacepoints_real_cluster_id;
+  std::vector<double> *Trec_spacepoints_sub_cluster_id;
+
   std::vector<double> *Treccharge_spacepoints_x;
   std::vector<double> *Treccharge_spacepoints_y;
   std::vector<double> *Treccharge_spacepoints_z;
   std::vector<double> *Treccharge_spacepoints_q;
+  std::vector<double> *Treccharge_spacepoints_cluster_id;
+  std::vector<double> *Treccharge_spacepoints_real_cluster_id;
+  std::vector<double> *Treccharge_spacepoints_sub_cluster_id;
+
   std::vector<double> *Trecchargeblob_spacepoints_x;
   std::vector<double> *Trecchargeblob_spacepoints_y;
   std::vector<double> *Trecchargeblob_spacepoints_z;
   std::vector<double> *Trecchargeblob_spacepoints_q;
+  std::vector<double> *Trecchargeblob_spacepoints_cluster_id;
+  std::vector<double> *Trecchargeblob_spacepoints_real_cluster_id;
+  std::vector<double> *Trecchargeblob_spacepoints_sub_cluster_id;
 };
 
  void set_tree_address(TTree *tree0, SpaceInfo& space_info, bool flag_runinfo = true);
@@ -33,14 +44,25 @@ void LEEana::init_pointers(SpaceInfo& space_info) {
   space_info.Trec_spacepoints_y = new std::vector<double>;
   space_info.Trec_spacepoints_z = new std::vector<double>;
   space_info.Trec_spacepoints_q = new std::vector<double>;
+  space_info.Trec_spacepoints_cluster_id = new std::vector<double>;
+  space_info.Trec_spacepoints_real_cluster_id = new std::vector<double>;
+  space_info.Trec_spacepoints_sub_cluster_id = new std::vector<double>;
+
   space_info.Treccharge_spacepoints_x = new std::vector<double>;
   space_info.Treccharge_spacepoints_y = new std::vector<double>;
   space_info.Treccharge_spacepoints_z = new std::vector<double>;
   space_info.Treccharge_spacepoints_q = new std::vector<double>;
+  space_info.Treccharge_spacepoints_cluster_id = new std::vector<double>;
+  space_info.Treccharge_spacepoints_real_cluster_id = new std::vector<double>;
+  space_info.Treccharge_spacepoints_sub_cluster_id = new std::vector<double>;
+
   space_info.Trecchargeblob_spacepoints_x = new std::vector<double>;
   space_info.Trecchargeblob_spacepoints_y = new std::vector<double>;
   space_info.Trecchargeblob_spacepoints_z = new std::vector<double>;
   space_info.Trecchargeblob_spacepoints_q = new std::vector<double>;
+  space_info.Trecchargeblob_spacepoints_cluster_id = new std::vector<double>;
+  space_info.Trecchargeblob_spacepoints_real_cluster_id = new std::vector<double>;
+  space_info.Trecchargeblob_spacepoints_sub_cluster_id = new std::vector<double>;
 }
 
 void LEEana::del_pointers(SpaceInfo& space_info) {
@@ -48,14 +70,25 @@ void LEEana::del_pointers(SpaceInfo& space_info) {
   delete space_info.Trec_spacepoints_y;
   delete space_info.Trec_spacepoints_z;
   delete space_info.Trec_spacepoints_q;
+  delete space_info.Trec_spacepoints_cluster_id;
+  delete space_info.Trec_spacepoints_real_cluster_id;
+  delete space_info.Trec_spacepoints_sub_cluster_id;
+
   delete space_info.Treccharge_spacepoints_x;
   delete space_info.Treccharge_spacepoints_y;
   delete space_info.Treccharge_spacepoints_z;
   delete space_info.Treccharge_spacepoints_q;
+  delete space_info.Treccharge_spacepoints_cluster_id;
+  delete space_info.Treccharge_spacepoints_real_cluster_id;
+  delete space_info.Treccharge_spacepoints_sub_cluster_id;
+
   delete space_info.Trecchargeblob_spacepoints_x;
   delete space_info.Trecchargeblob_spacepoints_y;
   delete space_info.Trecchargeblob_spacepoints_z;
   delete space_info.Trecchargeblob_spacepoints_q;
+  delete space_info.Trecchargeblob_spacepoints_cluster_id;
+  delete space_info.Trecchargeblob_spacepoints_real_cluster_id;
+  delete space_info.Trecchargeblob_spacepoints_sub_cluster_id;
 }
 
 void LEEana::clear_space_info(SpaceInfo& space_info) {
@@ -63,14 +96,25 @@ void LEEana::clear_space_info(SpaceInfo& space_info) {
   space_info.Trec_spacepoints_y->clear();
   space_info.Trec_spacepoints_z->clear();
   space_info.Trec_spacepoints_q->clear();
+  space_info.Trec_spacepoints_cluster_id->clear();
+  space_info.Trec_spacepoints_real_cluster_id->clear();
+  space_info.Trec_spacepoints_sub_cluster_id->clear();
+
   space_info.Treccharge_spacepoints_x->clear();
   space_info.Treccharge_spacepoints_y->clear();
   space_info.Treccharge_spacepoints_z->clear();
   space_info.Treccharge_spacepoints_q->clear();
+  space_info.Treccharge_spacepoints_cluster_id->clear();
+  space_info.Treccharge_spacepoints_real_cluster_id->clear();
+  space_info.Treccharge_spacepoints_sub_cluster_id->clear();
+
   space_info.Trecchargeblob_spacepoints_x->clear();
   space_info.Trecchargeblob_spacepoints_y->clear();
   space_info.Trecchargeblob_spacepoints_z->clear();
   space_info.Trecchargeblob_spacepoints_q->clear();
+  space_info.Trecchargeblob_spacepoints_cluster_id->clear();
+  space_info.Trecchargeblob_spacepoints_real_cluster_id->clear();
+  space_info.Trecchargeblob_spacepoints_sub_cluster_id->clear();
 }
 
 void LEEana::set_tree_address(TTree *tree0, SpaceInfo& space_info, bool flag_runinfo) {
@@ -84,14 +128,23 @@ void LEEana::set_tree_address(TTree *tree0, SpaceInfo& space_info, bool flag_run
   tree0->SetBranchAddress("Trec_spacepoints_y", &space_info.Trec_spacepoints_y);
   tree0->SetBranchAddress("Trec_spacepoints_z", &space_info.Trec_spacepoints_z);
   tree0->SetBranchAddress("Trec_spacepoints_q", &space_info.Trec_spacepoints_q);
+  tree0->SetBranchAddress("Trec_spacepoints_cluster_id", &space_info.Trec_spacepoints_cluster_id);
+  tree0->SetBranchAddress("Trec_spacepoints_real_cluster_id", &space_info.Trec_spacepoints_real_cluster_id);
+  tree0->SetBranchAddress("Trec_spacepoints_sub_cluster_id", &space_info.Trec_spacepoints_sub_cluster_id);
   tree0->SetBranchAddress("Treccharge_spacepoints_x", &space_info.Treccharge_spacepoints_x);
   tree0->SetBranchAddress("Treccharge_spacepoints_y", &space_info.Treccharge_spacepoints_y);
   tree0->SetBranchAddress("Treccharge_spacepoints_z", &space_info.Treccharge_spacepoints_z);
   tree0->SetBranchAddress("Treccharge_spacepoints_q", &space_info.Treccharge_spacepoints_q);
+  tree0->SetBranchAddress("Treccharge_spacepoints_cluster_id", &space_info.Treccharge_spacepoints_cluster_id);
+  tree0->SetBranchAddress("Treccharge_spacepoints_real_cluster_id", &space_info.Treccharge_spacepoints_real_cluster_id);
+  tree0->SetBranchAddress("Treccharge_spacepoints_sub_cluster_id", &space_info.Treccharge_spacepoints_sub_cluster_id);
   tree0->SetBranchAddress("Trecchargeblob_spacepoints_x", &space_info.Trecchargeblob_spacepoints_x);
   tree0->SetBranchAddress("Trecchargeblob_spacepoints_y", &space_info.Trecchargeblob_spacepoints_y);
   tree0->SetBranchAddress("Trecchargeblob_spacepoints_z", &space_info.Trecchargeblob_spacepoints_z);
   tree0->SetBranchAddress("Trecchargeblob_spacepoints_q", &space_info.Trecchargeblob_spacepoints_q);
+  tree0->SetBranchAddress("Trecchargeblob_spacepoints_cluster_id", &space_info.Trecchargeblob_spacepoints_cluster_id);
+  tree0->SetBranchAddress("Trecchargeblob_spacepoints_real_cluster_id", &space_info.Trecchargeblob_spacepoints_real_cluster_id);
+  tree0->SetBranchAddress("Trecchargeblob_spacepoints_sub_cluster_id", &space_info.Trecchargeblob_spacepoints_sub_cluster_id);
 }
 
 void LEEana::put_tree_address(TTree *tree0, SpaceInfo& space_info) {
@@ -103,14 +156,23 @@ void LEEana::put_tree_address(TTree *tree0, SpaceInfo& space_info) {
   tree0->Branch("Trec_spacepoints_y", &space_info.Trec_spacepoints_y);
   tree0->Branch("Trec_spacepoints_z", &space_info.Trec_spacepoints_z);
   tree0->Branch("Trec_spacepoints_q", &space_info.Trec_spacepoints_q);
+  tree0->Branch("Trec_spacepoints_cluster_id", &space_info.Trec_spacepoints_cluster_id);
+  tree0->Branch("Trec_spacepoints_real_cluster_id", &space_info.Trec_spacepoints_real_cluster_id);
+  tree0->Branch("Trec_spacepoints_sub_cluster_id", &space_info.Trec_spacepoints_sub_cluster_id);
   tree0->Branch("Treccharge_spacepoints_x", &space_info.Treccharge_spacepoints_x);
   tree0->Branch("Treccharge_spacepoints_y", &space_info.Treccharge_spacepoints_y);
   tree0->Branch("Treccharge_spacepoints_z", &space_info.Treccharge_spacepoints_z);
   tree0->Branch("Treccharge_spacepoints_q", &space_info.Treccharge_spacepoints_q);
+  tree0->Branch("Treccharge_spacepoints_cluster_id", &space_info.Treccharge_spacepoints_cluster_id);
+  tree0->Branch("Treccharge_spacepoints_real_cluster_id", &space_info.Treccharge_spacepoints_real_cluster_id);
+  tree0->Branch("Treccharge_spacepoints_sub_cluster_id", &space_info.Treccharge_spacepoints_sub_cluster_id);
   tree0->Branch("Trecchargeblob_spacepoints_x", &space_info.Trecchargeblob_spacepoints_x);
   tree0->Branch("Trecchargeblob_spacepoints_y", &space_info.Trecchargeblob_spacepoints_y);
   tree0->Branch("Trecchargeblob_spacepoints_z", &space_info.Trecchargeblob_spacepoints_z);
   tree0->Branch("Trecchargeblob_spacepoints_q", &space_info.Trecchargeblob_spacepoints_q);
+  tree0->Branch("Trecchargeblob_spacepoints_cluster_id", &space_info.Trecchargeblob_spacepoints_cluster_id);
+  tree0->Branch("Trecchargeblob_spacepoints_real_cluster_id", &space_info.Trecchargeblob_spacepoints_real_cluster_id);
+  tree0->Branch("Trecchargeblob_spacepoints_sub_cluster_id", &space_info.Trecchargeblob_spacepoints_sub_cluster_id);
 }
 
 #endif
