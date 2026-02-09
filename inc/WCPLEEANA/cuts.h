@@ -4128,6 +4128,8 @@ float LEEana::calc_holly_antinue_bdt(TMVA::Reader* reader, KineInfo& kine, EvalI
     return bdt_val;
 }
 
+// fetch FHC or RHC run from here :
+// https://cdcvs.fnal.gov/redmine/projects/uboone-physics-analysis/wiki/NuMI_Documentation
 bool LEEana::isFHC(EvalInfo& eval)
 {
   if (eval.run < 6748 || (eval.run == 6748 && eval.subrun <= 22)) return true; // run 1
