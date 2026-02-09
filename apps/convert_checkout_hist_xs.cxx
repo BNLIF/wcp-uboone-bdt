@@ -35,7 +35,7 @@ int main( int argc, char** argv )
   TString bdt_varname = "";
   if (argc == 4 && (argv[3][1] == 'b')){
     flag_bdt = 1;
-    bdt_varname = "holly_antinue_bdt";
+    bdt_varname = &argv[3][2];
   }
 
   TFile *file = new TFile(input_filename,"READ");
@@ -290,7 +290,7 @@ int main( int argc, char** argv )
       if(T_PFeval->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
         T_PFeval->SetBranchStatus("reco_Ntrack",1);
         T_PFeval->SetBranchStatus("reco_pdg",1); 
-    }
+      }
   }
   if (pfeval.flag_NCDelta){
     
