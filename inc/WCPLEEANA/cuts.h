@@ -4,6 +4,7 @@
 // define cuts here ...
 #include "TCut.h"
 #include "TString.h"
+#include "TVector3.h"
 #include "TLorentzVector.h"
 #include "TH1F.h"
 
@@ -12,6 +13,13 @@
 #include "eval.h"
 #include "pfeval.h"
 
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TMVAGui.h"
+#include "TMVA/Reader.h"
+
+#include <cstdlib>
 #include <map>
 #include <sstream>
 #include <fstream>
@@ -31,10 +39,10 @@ namespace LEEana{
   double get_reco_Eproton(KineInfo& kine);
   double get_reco_Epion(KineInfo& kine);
 
-  double get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool flag_data, TString var_name="kine_reco_Enu");
+  double get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool flag_data, TString var_name="kine_reco_Enu", TMVA::Reader* reader = 0);
   double get_truth_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, TString var_name); 
  
-  bool get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
+  bool get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine, TMVA::Reader* reader = 0);
   bool get_rw_cut_pass(TString cut, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
   double get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeval, KineInfo& kine, TaggerInfo& tagger, std::tuple< bool, std::vector< std::tuple<bool, TString, TString, double, double, bool, bool, bool,  std::vector<double>, std::vector<double>  > > > rw_info, bool flag_data=false);
   int get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bin, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine);
@@ -101,6 +109,10 @@ namespace LEEana{
 
   int mcc8_pmuon_costheta_bin(float pmuon, float costh);
   int alt_var_index(std::string var1, float val1, std::string var2, float val2, std::string config="./configurations/alt_var_xbins.txt");
+  // for holly's BDTs
+  float calc_holly_antinue_bdt(TMVA::Reader* reader, KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool is_fhc=1);
+  bool isFHC(EvalInfo& eval);
+
   std::map<std::string, TH1F> map_var_hist; // variable name and binning
 }
 
@@ -275,7 +287,7 @@ double LEEana::get_truth_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval,
 }
 
 
-double LEEana::get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool flag_data , TString var_name){
+double LEEana::get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool flag_data , TString var_name, TMVA::Reader* reader){
   //  if (var_name == "kine_reco_Enu"){
   //  return kine.kine_reco_Enu;
   //  }else
@@ -783,6 +795,15 @@ double LEEana::get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, 
         } else {
                 std::cout << "No such proton-pi0 variable: " << var_name << std::endl;
         }
+  }
+  else if(var_name == "holly_antinue_bdt"){
+    if(!reader){
+      std::cout << "BDT not loaded for " << var_name << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    bool is_fhc = isFHC(eval);
+    float bdt_val = calc_holly_antinue_bdt(reader, kine, eval, pfeval, tagger, is_fhc);
+    return bdt_val;
   }else{
     std::cout << "No such variable: " << var_name << std::endl;
     exit(EXIT_FAILURE);
@@ -1632,7 +1653,7 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
   return -1;
 }
 
-bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine){
+bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine, TMVA::Reader* reader){
 
 
   double reco_Enu = get_reco_Enu_corr(kine, flag_data);
@@ -4062,6 +4083,54 @@ int LEEana::alt_var_index(std::string var1, float val1, std::string var2, float 
   }
 
   return -1;
+}
+
+float LEEana::calc_holly_antinue_bdt(TMVA::Reader* reader, KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool is_fhc){
+
+		float Num_Proton = 0.;
+		float cos_theta;
+		float Num_Neutron = 0.;
+		float mip_quality_n_showers;
+		float kine_reco_Enu;
+		float shower_energy;
+
+		for(size_t i=0; i<kine.kine_energy_particle->size(); i++)
+		{
+			int pdgcode = kine.kine_particle_type->at(i);
+			if(abs(pdgcode)== 2212 && kine.kine_energy_particle->at(i)>35){ // proton KE threshold
+				Num_Proton += 1;
+			}
+		}
+
+		for(int i = 0; i < pfeval.reco_Ntrack; i++)
+	  {
+			int pdgcode = pfeval.reco_pdg[i];
+			if (abs(pdgcode) == 2112 && pfeval.reco_mother[i] == 0)
+				Num_Neutron += 1;
+		}
+
+		TVector3 numi_pos(-31387.58422, -3316.402543, -60100.2414);
+		TVector3 reco_nuvtx(pfeval.reco_nuvtxX, pfeval.reco_nuvtxY, pfeval.reco_nuvtxZ);
+    TVector3 diff = reco_nuvtx - numi_pos;
+		TVector3 showerMomentum(pfeval.reco_showerMomentum[0], pfeval.reco_showerMomentum[1], pfeval.reco_showerMomentum[2]);
+   	cos_theta = diff.Dot(showerMomentum)/(diff.Mag() * showerMomentum.Mag());
+		shower_energy = pfeval.reco_showerMomentum[3];
+		kine_reco_Enu = kine.kine_reco_Enu;
+		mip_quality_n_showers = tagger.mip_quality_n_showers;
+
+		float bdt_val = -5.;
+    if(is_fhc)
+      bdt_val = reader->EvaluateMVA("holly_antinue_bdt_fhc");
+    else
+      bdt_val = reader->EvaluateMVA("holly_antinue_bdt_rhc");
+    if(std::isnan(bdt_val))
+      return -5.;
+    return bdt_val;
+}
+
+bool LEEana::isFHC(EvalInfo& eval)
+{
+  return true;
 }
 
 #endif

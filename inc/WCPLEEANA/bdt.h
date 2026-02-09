@@ -1,3 +1,6 @@
+#ifndef UBOONE_LEE_BDT
+#define UBOONE_LEE_BDT
+
 namespace LEEana{
 
   float cal_nc_delta_bdts_xgboost(TaggerInfo& tagger_info, TMVA::Reader& reader);
@@ -123,6 +126,8 @@ float cal_tro_5_bdt(float default_val , TaggerInfo& tagger_info, TMVA::Reader& r
 		    float& tro_5_v_min_count,
 		    float& tro_5_v_max_count,
 		    float& tro_5_v_energy);
+
+TMVA::Reader* fetch_bdtreader(TString var_name);
 
 }
 
@@ -648,3 +653,28 @@ float LEEana::cal_bdts_xgboost(TaggerInfo& tagger_info, TMVA::Reader& reader){
 
   return val;
 }
+
+TMVA::Reader* LEEana::fetch_bdtreader(TString var_name){
+	if(var_name == "holly_antinue_bdt"){
+		TMVA::Reader* reader;
+		float Num_Proton;
+		float cos_theta;
+		float Num_Neutron;
+		float mip_quality_n_showers;
+		float kine_reco_Enu;
+		float shower_energy;
+
+		reader->AddVariable("Num_Proton", &Num_Proton);
+		reader->AddVariable("cos_theta", &cos_theta);
+		reader->AddVariable("Num_Neutron", &Num_Neutron);
+		reader->AddVariable("mip_quality_n_showers", &mip_quality_n_showers);
+		reader->AddVariable("kine_reco_Enu", &kine_reco_Enu);
+		reader->AddVariable("shower_energy", &shower_energy);
+		reader->BookMVA(var_name+"_fhc", "bdt_weights/"+var_name+"_fhc.xml");
+		reader->BookMVA(var_name+"_rhc", "bdt_weights/"+var_name+"_rhc.xml");
+
+		return reader;
+	}
+}
+
+#endif
