@@ -1,7 +1,9 @@
 #include <iostream>
+#include <memory>
 
 #include "WCPLEEANA/master_cov_matrix.h"
 #include "WCPLEEANA/bayes.h"
+#include "WCPLEEANA/bdt.h"
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -16,6 +18,11 @@
 #include "TTree.h"
 #include "TStyle.h"
 #include "TVectorD.h"
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TMVAGui.h"
+#include "TMVA/Reader.h"
 
 using namespace std;
 using namespace LEEana;
@@ -29,6 +36,8 @@ int main( int argc, char** argv )
   int run = 1; // run 1 ..
   int flag_spec_weights = 0;
   bool flag_osc = false;
+  int flag_bdt = 0;
+  TString bdt_varname = "";
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'r':
@@ -39,6 +48,10 @@ int main( int argc, char** argv )
       break;
     case 'o':
       flag_osc = atoi(&argv[i][2]);
+      break;
+    case 'b':
+      flag_bdt = 1;
+      bdt_varname = &argv[i][2];  // load bdt model
       break;
     }
   }
@@ -58,6 +71,12 @@ int main( int argc, char** argv )
   
   if(run>17) cov.add_rw_config(run);
   cov.print_rw(cov.get_rw_info());
+
+  std::shared_ptr<TMVA::Reader> reader = 0;
+  if(flag_bdt){
+    reader = std::shared_ptr<TMVA::Reader>(fetch_bdtreader(bdt_varname));
+    cov.set_bdt_reader(reader);
+  }
 
   // Get the file based on runno ...
   std::map<TString, std::tuple<int, int, TString, float, int, double, int> > map_inputfile_info = cov.get_map_inputfile_info();

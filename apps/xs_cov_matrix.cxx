@@ -1,7 +1,9 @@
 #include <iostream>
+#include <memory>
 
 #include "WCPLEEANA/master_cov_matrix.h"
 #include "WCPLEEANA/bayes.h"
+#include "WCPLEEANA/bdt.h"
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -17,6 +19,11 @@
 #include "TTree.h"
 #include "TStyle.h"
 #include "TVectorD.h"
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TMVAGui.h"
+#include "TMVA/Reader.h"
 
 using namespace std;
 using namespace LEEana;
@@ -28,10 +35,16 @@ int main( int argc, char** argv )
     std::cout << "./xf_cov_matrix -r[#sys 1-14]" << std::endl;
   }
   int run = 17; // run 1 ... xs ...
+  int flag_bdt = 0;
+  TString bdt_varname = "";
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'r':
       run = atoi(&argv[i][2]); // which run period
+      break;
+    case 'b':
+      flag_bdt = 1;
+      bdt_varname = &argv[i][2];  // load bdt model
       break;
     }
   }
@@ -63,6 +76,11 @@ int main( int argc, char** argv )
 
 
   cov.print_rw(cov.get_rw_info());
+  std::shared_ptr<TMVA::Reader> reader = 0;
+  if(flag_bdt){
+    reader = std::shared_ptr<TMVA::Reader>(fetch_bdtreader(bdt_varname));
+    cov.set_bdt_reader(reader);
+  }
 
   // Get the file based on runno ...
   std::map<TString, std::tuple<int, int, TString, float, int, double, int> > map_inputfile_info = cov.get_map_inputfile_info();

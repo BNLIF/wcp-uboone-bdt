@@ -1,8 +1,10 @@
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #include "WCPLEEANA/master_cov_matrix.h"
 #include "WCPLEEANA/bayes.h"
+#include "WCPLEEANA/bdt.h"
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -23,6 +25,11 @@
 #include "TPDF.h"
 #include "TF1.h"
 #include "TVectorD.h"
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TMVAGui.h"
+#include "TMVA/Reader.h"
 
 using namespace std;
 using namespace LEEana;
@@ -39,6 +46,8 @@ int main( int argc, char** argv )
   float lee_strength = 0; // no LEE strength ...
   int flag_display = 0;
   int flag_breakdown = 0;
+  int flag_bdt = 0;
+  TString bdt_varname = "";
 
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
@@ -54,14 +63,23 @@ int main( int argc, char** argv )
     case 'd':
       flag_display = atoi(&argv[i][2]);
       break;
-    case 'b':
+    case 's':
       flag_breakdown = atoi(&argv[i][2]);
+      break;
+    case 'b':
+      flag_bdt = 1;
+      bdt_varname = &argv[i][2];  // load bdt model
       break;
     }
   }
 
   CovMatrix cov;
   cov.add_xs_config();
+  std::shared_ptr<TMVA::Reader> reader = 0;
+  if(flag_bdt){
+    reader = std::shared_ptr<TMVA::Reader>(fetch_bdtreader(bdt_varname));
+    cov.set_bdt_reader(reader);
+  }
 
   // get data histograms ...
   // filetype, period, outfilename, external pot, fileno
