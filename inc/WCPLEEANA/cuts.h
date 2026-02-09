@@ -4130,7 +4130,13 @@ float LEEana::calc_holly_antinue_bdt(TMVA::Reader* reader, KineInfo& kine, EvalI
 
 bool LEEana::isFHC(EvalInfo& eval)
 {
-  return true;
+  if (eval.run < 6748 || (eval.run == 6748 && eval.subrun <= 22)) return true; // run 1
+  else if(eval.run <= 7001) return false;
+  else if(eval.run <= 10139) return true; // run 2
+  else if(eval.run <= 11949) return false;
+  else if(eval.run <= 17566) return false; // run 3
+  else if(eval.run <= 21410) return false;
+  else return true;
 }
 
 #endif
