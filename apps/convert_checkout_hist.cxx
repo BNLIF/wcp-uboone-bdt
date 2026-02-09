@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "WCPLEEANA/master_cov_matrix.h"
 
@@ -90,9 +91,11 @@ int main( int argc, char** argv )
   if (ext_pot != 0) total_pot = ext_pot;
   
   std::cout << "Total POT: " << total_pot << " external POT: " << ext_pot << std::endl;
-  TMVA::Reader* reader = 0;
-  if(flag_bdt)
-    reader = fetch_bdtreader(bdt_varname);
+  std::shared_ptr<TMVA::Reader> reader = 0;
+  if(flag_bdt){
+    reader = std::shared_ptr<TMVA::Reader>(fetch_bdtreader(bdt_varname));
+    cov.set_bdt_reader(reader);
+  }
 
   
   // prepare histograms ...
@@ -286,6 +289,7 @@ int main( int argc, char** argv )
       if(T_PFeval->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
         T_PFeval->SetBranchStatus("reco_Ntrack",1);
         T_PFeval->SetBranchStatus("reco_pdg",1); 
+        T_PFeval->SetBranchStatus("reco_mother",1); 
       }
       
   }

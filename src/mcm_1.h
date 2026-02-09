@@ -493,7 +493,6 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
   T_eval_cv->SetBranchStatus("stm_FullDead",1);
   T_eval_cv->SetBranchStatus("stm_clusterlength",1);
   
-  
   T_eval_cv->SetBranchStatus("weight_spline",1);
   T_eval_cv->SetBranchStatus("weight_cv",1);
   T_eval_cv->SetBranchStatus("weight_lee",1);
@@ -580,6 +579,11 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
      T_PFeval_cv->SetBranchStatus("truth_pdg",1);
      T_PFeval_cv->SetBranchStatus("truth_mother",1);
      T_PFeval_cv->SetBranchStatus("truth_startMomentum",1);
+  }
+  if(T_PFeval_cv->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
+    T_PFeval_cv->SetBranchStatus("reco_Ntrack",1);
+    T_PFeval_cv->SetBranchStatus("reco_pdg",1); 
+    T_PFeval_cv->SetBranchStatus("reco_mother",1); 
   }
 
   
@@ -714,6 +718,11 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
       T_PFeval_det->SetBranchStatus("truth_mother",1);
       T_PFeval_det->SetBranchStatus("truth_startMomentum",1);
   }
+  if(T_PFeval_det->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
+    T_PFeval_det->SetBranchStatus("reco_Ntrack",1);
+    T_PFeval_det->SetBranchStatus("reco_pdg",1); 
+    T_PFeval_det->SetBranchStatus("reco_mother",1); 
+  }
   
   std::vector<std::tuple<int, int, double, double, std::set<std::tuple<int, double, bool, double, bool> > > > vec_events;
 
@@ -761,11 +770,11 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
       auto it3 = disabled_ch_names.find(ch_name);
       if (it3 != disabled_ch_names.end()) continue;
       
-      double val = get_kine_var(kine_cv, eval_cv, pfeval_cv, tagger_cv, false, var_name);
-      bool flag_pass = get_cut_pass(ch_name, add_cut, false, eval_cv, pfeval_cv, tagger_cv, kine_cv);
+      double val = get_kine_var(kine_cv, eval_cv, pfeval_cv, tagger_cv, false, var_name, fReader);
+      bool flag_pass = get_cut_pass(ch_name, add_cut, false, eval_cv, pfeval_cv, tagger_cv, kine_cv, fReader);
 
-      double val1 = get_kine_var(kine_det, eval_det, pfeval_det, tagger_det, false, var_name);
-      bool flag_pass1 = get_cut_pass(ch_name, add_cut, false, eval_det, pfeval_det, tagger_det, kine_det);
+      double val1 = get_kine_var(kine_det, eval_det, pfeval_det, tagger_det, false, var_name, fReader);
+      bool flag_pass1 = get_cut_pass(ch_name, add_cut, false, eval_det, pfeval_det, tagger_det, kine_det, fReader);
       if (flag_pass || flag_pass1) {
 	std::get<4>(vec_events.at(i) ).insert(std::make_tuple(no, val, flag_pass, val1, flag_pass1));
       }

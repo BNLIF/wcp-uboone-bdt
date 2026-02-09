@@ -815,6 +815,11 @@ void LEEana::CovMatrix::get_pred_events_info(TString input_filename, std::map<TS
      T_PFeval->SetBranchStatus("truth_mother",1); 
      T_PFeval->SetBranchStatus("truth_startMomentum",1); 
   }
+  if(T_PFeval->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
+    T_PFeval->SetBranchStatus("reco_Ntrack",1);
+    T_PFeval->SetBranchStatus("reco_pdg",1); 
+    T_PFeval->SetBranchStatus("reco_mother",1); 
+  }
 
   std::vector<std::tuple<int, int, double, double, std::set<std::tuple<int, double, bool> > > > vec_events;
 
@@ -853,8 +858,8 @@ void LEEana::CovMatrix::get_pred_events_info(TString input_filename, std::map<TS
       TString ch_name = std::get<5>(*it);
       TString add_cut = std::get<6>(*it);
 
-      double val = get_kine_var(kine, eval, pfeval, tagger, flag_data, var_name);
-      bool flag_pass = get_cut_pass(ch_name, add_cut, flag_data, eval, pfeval, tagger, kine);
+      double val = get_kine_var(kine, eval, pfeval, tagger, flag_data, var_name, fReader);
+      bool flag_pass = get_cut_pass(ch_name, add_cut, flag_data, eval, pfeval, tagger, kine, fReader);
 
       if (flag_pass) std::get<4>(vec_events.at(i)).insert(std::make_tuple(no, val, flag_pass));
       

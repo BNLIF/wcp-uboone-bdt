@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "WCPLEEANA/master_cov_matrix.h"
 
@@ -290,6 +291,7 @@ int main( int argc, char** argv )
       if(T_PFeval->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
         T_PFeval->SetBranchStatus("reco_Ntrack",1);
         T_PFeval->SetBranchStatus("reco_pdg",1); 
+        T_PFeval->SetBranchStatus("reco_mother",1); 
       }
   }
   if (pfeval.flag_NCDelta){
@@ -313,9 +315,11 @@ int main( int argc, char** argv )
   }
 
   std::cout << "Total entries: " << T_eval->GetEntries() << std::endl;
-  TMVA::Reader* reader = 0;
-  if(flag_bdt)
-    reader = fetch_bdtreader(bdt_varname);
+  std::shared_ptr<TMVA::Reader> reader = 0;
+  if(flag_bdt){
+    reader = std::shared_ptr<TMVA::Reader>(fetch_bdtreader(bdt_varname));
+    cov.set_bdt_reader(reader);
+  }
 
 
   for (Int_t i=0;i!=T_eval->GetEntries();i++){

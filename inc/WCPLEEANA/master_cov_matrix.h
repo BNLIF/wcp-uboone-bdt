@@ -8,11 +8,13 @@
 #include "TH2F.h"
 #include "TTree.h"
 #include "TGraph.h"
+#include "TMVA/Reader.h"
 #include <map>
 #include <set>
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 // #include "WCPLEEANA/eval.h"
 // #include "WCPLEEANA/pfeval.h"
@@ -39,6 +41,12 @@ namespace LEEana{
     void print_matrix();
     
     void print_cvfile_info();
+
+    // tmva reader
+    void set_bdt_reader(std::shared_ptr<TMVA::Reader> reader){
+      fReader = reader;
+      bdt_set = true;
+    }
 
     // histogram ...
     TString get_ch_name(int ch);
@@ -264,6 +272,10 @@ namespace LEEana{
     // special weights ...
     bool flag_spec_weights;
     std::vector<std::vector<float> > spec_weights;
+
+    // access special tmva readers for on-the-fly calculation;
+    std::shared_ptr<TMVA::Reader> fReader = 0;
+    bool bdt_set = false;
     
   };
 }
