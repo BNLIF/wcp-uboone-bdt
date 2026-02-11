@@ -286,13 +286,13 @@ int main( int argc, char** argv )
         T_PFeval->SetBranchStatus("truth_mother",1); 
         T_PFeval->SetBranchStatus("truth_startMomentum",1); 
       }
-      if(T_PFeval->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
-        T_PFeval->SetBranchStatus("reco_Ntrack",1);
-        T_PFeval->SetBranchStatus("reco_pdg",1); 
-        T_PFeval->SetBranchStatus("reco_mother",1); 
-      }
-      
   }
+  if(T_PFeval->GetBranch("reco_mother")){//prevents throwing an error for the non _PF files
+    T_PFeval->SetBranchStatus("reco_Ntrack",1);
+    T_PFeval->SetBranchStatus("reco_pdg",1); 
+    T_PFeval->SetBranchStatus("reco_mother",1); 
+  }
+      
   if (pfeval.flag_NCDelta){
     
       if (!flag_data){
