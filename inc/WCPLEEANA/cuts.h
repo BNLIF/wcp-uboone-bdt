@@ -4088,49 +4088,49 @@ int LEEana::alt_var_index(std::string var1, float val1, std::string var2, float 
 
 float LEEana::calc_holly_antinue_bdt(std::shared_ptr<TMVA::Reader> reader, KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, bool is_fhc){
 
-		float Num_Proton = 0.;
-		float cos_theta;
-		float Num_Neutron = 0.;
-		float mip_quality_n_showers;
-		float kine_reco_Enu;
-		float shower_energy;
+  float Num_Proton = 0.;
+  float cos_theta;
+  float Num_Neutron = 0.;
+  float mip_quality_n_showers;
+  float kine_reco_Enu;
+  float shower_energy;
 
-		for(size_t i=0; i<kine.kine_energy_particle->size(); i++)
-		{
-			int pdgcode = kine.kine_particle_type->at(i);
-			if(abs(pdgcode)== 2212 && kine.kine_energy_particle->at(i)>35){ // proton KE threshold
-				Num_Proton += 1;
-			}
-		}
+  for(size_t i=0; i<kine.kine_energy_particle->size(); i++)
+  {
+    int pdgcode = kine.kine_particle_type->at(i);
+    if(abs(pdgcode)== 2212 && kine.kine_energy_particle->at(i)>35){ // proton KE threshold
+      Num_Proton += 1;
+    }
+  }
 
-		for(int i = 0; i < pfeval.reco_Ntrack; i++)
-	  {
-			int pdgcode = pfeval.reco_pdg[i];
-			if (abs(pdgcode) == 2112 && pfeval.reco_mother[i] == 0)
-				Num_Neutron += 1;
-		}
+  for(int i = 0; i < pfeval.reco_Ntrack; i++)
+  {
+    int pdgcode = pfeval.reco_pdg[i];
+    if (abs(pdgcode) == 2112 && pfeval.reco_mother[i] == 0)
+      Num_Neutron += 1;
+  }
 
-		TVector3 numi_pos(-31387.58422, -3316.402543, -60100.2414);
-		TVector3 reco_nuvtx(pfeval.reco_nuvtxX, pfeval.reco_nuvtxY, pfeval.reco_nuvtxZ);
-    TVector3 diff = reco_nuvtx - numi_pos;
-		TVector3 showerMomentum(pfeval.reco_showerMomentum[0], pfeval.reco_showerMomentum[1], pfeval.reco_showerMomentum[2]);
-   	cos_theta = diff.Dot(showerMomentum)/(diff.Mag() * showerMomentum.Mag());
-		shower_energy = pfeval.reco_showerMomentum[3];
-		kine_reco_Enu = kine.kine_reco_Enu;
-		mip_quality_n_showers = tagger.mip_quality_n_showers;
+  TVector3 numi_pos(-31387.58422, -3316.402543, -60100.2414);
+  TVector3 reco_nuvtx(pfeval.reco_nuvtxX, pfeval.reco_nuvtxY, pfeval.reco_nuvtxZ);
+  TVector3 diff = reco_nuvtx - numi_pos;
+  TVector3 showerMomentum(pfeval.reco_showerMomentum[0], pfeval.reco_showerMomentum[1], pfeval.reco_showerMomentum[2]);
+  cos_theta = diff.Dot(showerMomentum)/(diff.Mag() * showerMomentum.Mag());
+  shower_energy = pfeval.reco_showerMomentum[3];
+  kine_reco_Enu = kine.kine_reco_Enu;
+  mip_quality_n_showers = tagger.mip_quality_n_showers;
 
-    // std::cout << Num_Proton << ", " << Num_Neutron << ", " << cos_theta << ", " << shower_energy << ", " << kine_reco_Enu << ", " << mip_quality_n_showers << "\n";
+  // std::cout << Num_Proton << ", " << Num_Neutron << ", " << cos_theta << ", " << shower_energy << ", " << kine_reco_Enu << ", " << mip_quality_n_showers << "\n";
 
-    std::vector<float> values = {Num_Proton, cos_theta, Num_Neutron, mip_quality_n_showers, kine_reco_Enu, shower_energy};
-		float bdt_val = -5.;
-    if(is_fhc)
-      bdt_val = reader->EvaluateMVA(values, "holly_antinue_bdt_fhc");
-    else
-      bdt_val = reader->EvaluateMVA(values, "holly_antinue_bdt_rhc");
-    if(std::isnan(bdt_val))
-      return -5.;
-    // std::cout << "BDT val : " << bdt_val << std::endl;
-    return bdt_val;
+  std::vector<float> values = {Num_Proton, cos_theta, Num_Neutron, mip_quality_n_showers, kine_reco_Enu, shower_energy};
+  float bdt_val = -5.;
+  if(is_fhc)
+    bdt_val = reader->EvaluateMVA(values, "holly_antinue_bdt_fhc");
+  else
+    bdt_val = reader->EvaluateMVA(values, "holly_antinue_bdt_rhc");
+  if(std::isnan(bdt_val))
+    return -5.;
+  // std::cout << "BDT val : " << bdt_val << std::endl;
+  return bdt_val;
 }
 
 // fetch FHC or RHC run from here :
