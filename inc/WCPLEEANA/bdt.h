@@ -656,7 +656,7 @@ float LEEana::cal_bdts_xgboost(TaggerInfo& tagger_info, TMVA::Reader& reader){
 
 TMVA::Reader* LEEana::fetch_bdtreader(TString var_name){
 	if(var_name == "holly_antinue_bdt"){
-		TMVA::Reader* reader;
+		TMVA::Reader* reader = new TMVA::Reader();
 		float Num_Proton;
 		float cos_theta;
 		float Num_Neutron;
