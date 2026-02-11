@@ -1,6 +1,8 @@
 #ifndef UBOONE_LEE_BDT
 #define UBOONE_LEE_BDT
 
+#include "TMVA/Reader.h"
+
 namespace LEEana{
 
   float cal_nc_delta_bdts_xgboost(TaggerInfo& tagger_info, TMVA::Reader& reader);
@@ -654,15 +656,16 @@ float LEEana::cal_bdts_xgboost(TaggerInfo& tagger_info, TMVA::Reader& reader){
   return val;
 }
 
+
 TMVA::Reader* LEEana::fetch_bdtreader(TString var_name){
 	if(var_name == "holly_antinue_bdt"){
-		TMVA::Reader* reader = new TMVA::Reader();
-		float Num_Proton;
-		float cos_theta;
-		float Num_Neutron;
-		float mip_quality_n_showers;
-		float kine_reco_Enu;
-		float shower_energy;
+    TMVA::Reader* reader = new TMVA::Reader();
+    float Num_Proton;
+    float cos_theta;
+    float Num_Neutron;
+    float mip_quality_n_showers;
+    float kine_reco_Enu;
+    float shower_energy;
 
 		reader->AddVariable("Num_Proton", &Num_Proton);
 		reader->AddVariable("cos_theta", &cos_theta);
@@ -675,6 +678,7 @@ TMVA::Reader* LEEana::fetch_bdtreader(TString var_name){
 
 		return reader;
 	}
+  return nullptr;
 }
 
 #endif

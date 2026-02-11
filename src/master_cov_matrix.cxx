@@ -214,7 +214,7 @@ LEEana::CovMatrix::CovMatrix(TString cov_filename, TString cv_filename, TString 
   std::ifstream infile1(cv_filename);
   while(!infile1.eof()){
     infile1 >> filetype >> name >> period >> input_filename >> out_filename >> ext_pot >> file_no >> norm_pot >> norm_period;
-    //std::cout << filetype << " " << out_filename << " " << file_no << std::endl;
+    std::cout << filetype << " " << out_filename << " " << file_no << " " << input_filename << std::endl;
     
     if (filetype == -1) break;
     
@@ -251,8 +251,6 @@ LEEana::CovMatrix::CovMatrix(TString cov_filename, TString cv_filename, TString 
     int file_no = std::get<4>(it->second);
     for (auto it1 = map_inputfile_cuts[filename].begin(); it1 != map_inputfile_cuts[filename].end(); it1++){
       TString add_cut = *it1;
-
-      //      std::cout << filename << " " << add_cut << std::endl;
       
       for (auto it2 = map_filetype_chs[filetype].begin(); it2 != map_filetype_chs[filetype].end(); it2++){
 	int ch = *it2;
@@ -266,8 +264,6 @@ LEEana::CovMatrix::CovMatrix(TString cov_filename, TString cv_filename, TString 
 	TString weight = std::get<5>(it3->second);
 	int lee_strength = std::get<7>(it3->second);
 
-	//std::cout << name << " " << lee_strength << std::endl;
-	
 	TString weight2 = weight + "_" + weight;
 	TString histo_name = name + Form("_%d_",file_no) + var_name + "_" + add_cut;
 	TString histo_name1 = histo_name + "_err2";
@@ -283,7 +279,7 @@ LEEana::CovMatrix::CovMatrix(TString cov_filename, TString cv_filename, TString 
 
 	map_pred_subch_histos[std::make_pair(name,add_cut)].insert(std::make_pair(histo_name, period));
 	map_pred_histo_histo_err2_lee[histo_name] = std::make_pair(histo_name1,lee_strength);
-	//std::cout << histo_name << " " << " " << histo_name1 << " " << nbin << " " << llimit << " " << hlimit << " " << var_name << " " << name << " " << add_cut << std::endl;
+  // std::cout << histo_name << " " << " " << histo_name1 << " " << nbin << " " << llimit << " " << hlimit << " " << var_name << " " << name << " " << add_cut << std::endl;
 	
 	//	std::cout << filename << " " << add_cut << std::endl;
       }

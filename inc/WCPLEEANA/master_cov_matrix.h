@@ -22,6 +22,7 @@
 #include "WCPLEEANA/pot.h"
 #include "WCPLEEANA/weights.h"
 #include "WCPLEEANA/pfeval.h"
+#include "WCPLEEANA/bdt.h"
 
 namespace LEEana{
   class CovMatrix{

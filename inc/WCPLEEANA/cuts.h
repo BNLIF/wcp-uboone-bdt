@@ -12,6 +12,7 @@
 #include "kine.h"
 #include "eval.h"
 #include "pfeval.h"
+#include "bdt.h"
 
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
@@ -4118,13 +4119,17 @@ float LEEana::calc_holly_antinue_bdt(std::shared_ptr<TMVA::Reader> reader, KineI
 		kine_reco_Enu = kine.kine_reco_Enu;
 		mip_quality_n_showers = tagger.mip_quality_n_showers;
 
+    // std::cout << Num_Proton << ", " << Num_Neutron << ", " << cos_theta << ", " << shower_energy << ", " << kine_reco_Enu << ", " << mip_quality_n_showers << "\n";
+
+    std::vector<float> values = {Num_Proton, cos_theta, Num_Neutron, mip_quality_n_showers, kine_reco_Enu, shower_energy};
 		float bdt_val = -5.;
     if(is_fhc)
-      bdt_val = reader->EvaluateMVA("holly_antinue_bdt_fhc");
+      bdt_val = reader->EvaluateMVA(values, "holly_antinue_bdt_fhc");
     else
-      bdt_val = reader->EvaluateMVA("holly_antinue_bdt_rhc");
+      bdt_val = reader->EvaluateMVA(values, "holly_antinue_bdt_rhc");
     if(std::isnan(bdt_val))
       return -5.;
+    // std::cout << "BDT val : " << bdt_val << std::endl;
     return bdt_val;
 }
 

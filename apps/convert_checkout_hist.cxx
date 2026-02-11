@@ -97,6 +97,8 @@ int main( int argc, char** argv )
     cov.set_bdt_reader(reader);
   }
 
+  if(reader)
+    std::cout << " Fetched my BDT " << "\n";
   
   // prepare histograms ...
   // declare histograms ...
