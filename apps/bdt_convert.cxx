@@ -88,8 +88,7 @@ int main( int argc, char** argv )
     ifstream infile(training_list);
     string tmp_type;
     int run, subrun;
-    while(!infile.eof()){
-      infile >> tmp_type >> run >> subrun;
+    while(infile >> tmp_type >> run >> subrun){
       map_type_run_subrun[tmp_type].insert(std::make_pair(run, subrun));
     }
     // std::cout << map_type_run_subrun.size() << std::endl;

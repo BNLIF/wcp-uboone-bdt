@@ -43,10 +43,10 @@ void put_tree_address(TTree *Tsig, KineInfo& tagger_info);
 void LEEana::clear_kine_info(KineInfo& tagger_info){
   tagger_info.kine_reco_Enu=0;
   tagger_info.kine_reco_add_energy=0;
-  tagger_info.kine_energy_particle->clear();
-  tagger_info.kine_energy_info->clear(); 
-  tagger_info.kine_particle_type->clear();
-  tagger_info.kine_energy_included->clear();
+  if (tagger_info.kine_energy_particle) tagger_info.kine_energy_particle->clear();
+  if (tagger_info.kine_energy_info) tagger_info.kine_energy_info->clear();
+  if (tagger_info.kine_particle_type) tagger_info.kine_particle_type->clear();
+  if (tagger_info.kine_energy_included) tagger_info.kine_energy_included->clear();
   tagger_info.kine_pio_mass=0;
   tagger_info.kine_pio_flag=0;
   tagger_info.kine_pio_vtx_dis=0;

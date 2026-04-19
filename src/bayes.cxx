@@ -27,13 +27,14 @@ LEEana::Bayes::~Bayes(){
   for (auto it = conv_vec.begin(); it != conv_vec.end(); it++){
     delete (*it);
   }
-  // for (auto it = f_conv_vec.begin(); it!= f_conv_vec.end(); it++){
-  //   delete (*it);
-  // }
+  for (auto it = f_conv_vec.begin(); it!= f_conv_vec.end(); it++){
+    delete (*it);
+  }
+  f_conv = nullptr; // f_conv_vec loop already deleted it
   for (auto it = f_test_vec.begin(); it!= f_test_vec.end(); it++){
     delete (*it);
   }
- 
+
   if (f_conv_num != (TF1*)0) delete f_conv_num;
   if (f_conv != (TF1*)0) delete f_conv;
   if (g1 != (TGraph*)0) delete g1;

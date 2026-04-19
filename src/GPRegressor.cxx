@@ -68,13 +68,12 @@ void GPRegressor::SolveHyperParameters()
   ROOT::Fit::Fitter fitter;
   
   int n = fKern.NPar();
-  double* par = new double[n];
+  std::vector<double> par(n);
   std::vector<double> par_start = fKern.GetParameters();
   for(int i = 0; i < n; i++)
     par[i] = log(par_start[i]);
 
-
-  fitter.SetFCN(lml, par);
+  fitter.SetFCN(lml, par.data());
   for(int i = 0; i < n; i++)
     fitter.Config().ParSettings(i).SetLimits(-5, 5);
   

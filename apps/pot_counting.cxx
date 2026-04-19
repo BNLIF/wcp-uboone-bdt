@@ -37,7 +37,7 @@ int main(int argc, char** argv){
   }
   
   TString bnb_file = argv[1];
-  TString extbnb_file = argv[2];
+  TString extbnb_file = (argc > 2) ? argv[2] : ""; // L-15 fix: guard before mode-2 use
 
   int run, subrun;
   double trigger_no, pot;
