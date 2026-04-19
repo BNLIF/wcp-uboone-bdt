@@ -41,7 +41,7 @@ namespace DataBase {
 
 
 ///////////////////////////////////////////////////////// ccc
-void TLee::Exe_Fiedman_Cousins_Data(TMatrixD matrix_fakedata, double Lee_true_low, double Lee_true_hgh, double step)
+void TLee::Exe_Feldman_Cousins_Data(TMatrixD matrix_fakedata, double Lee_true_low, double Lee_true_hgh, double step)
 {
   cout<<endl<<" ---> Exe_Feldman_Cousins_Data"<<endl;
   
@@ -95,7 +95,7 @@ void TLee::Exe_Fiedman_Cousins_Data(TMatrixD matrix_fakedata, double Lee_true_lo
   file_data->Close();      
 }
   
-void TLee::Exe_Fledman_Cousins_Asimov(double Lee_true_low, double Lee_true_hgh, double step)
+void TLee::Exe_Feldman_Cousins_Asimov(double Lee_true_low, double Lee_true_hgh, double step)
 {
   cout<<endl<<" ---> Exe_Feldman_Cousins_Asimov"<<endl<<endl;
   
