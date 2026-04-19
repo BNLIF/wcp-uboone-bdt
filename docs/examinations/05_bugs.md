@@ -14,6 +14,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Replace the per-universe seed with a single seed set once before the loop (e.g. `gRandom->SetSeed(run_number * 131071 + systematic_index)`) and let `gRandom->Gaus()` advance the state naturally across universes. Alternatively, construct a `TRandom3` with seed 0 (clock-based) once and draw from it inside the loop without re-seeding.
 
+**Fixed:** commit `d99fa05` — seed moved before the universe loop using `(unsigned int)(weight.run * 131071u + weight.event)`; both the `"reweight"` and `"UBGenieFluxSmallUni"` branches updated. Covered by `test/test_master_cov_seeds.sh`.
+
 **Cross-reference:** → 02_core_framework.md §CovMatrix / systematic universe construction
 
 ---
@@ -25,6 +27,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** Lines 50–52 overwrite `p1x[i]` and `p2x[i]` with their logarithms in place; the guard `if (GPKernel::fPars[i]==0 && p1x[i]!=p2x[i])` at line 59 is then comparing log-transformed coordinates. For a dimension whose scale is zero (disabled), the equality `p1x[i] != p2x[i]` is evaluated on the log values, not the originals, so two points that originally differed only in a log-scale dimension will give the wrong early-exit result of `1e6`. Because `GPPoint` is passed by value, the mutation is confined to local copies and does not corrupt training-set coordinates across calls; the damage is limited to incorrect early-exit logic within the affected call.
 
 **Fix sketch:** Apply the log transformation into a separate local array rather than overwriting `p1x` and `p2x`, so the dimension-zero guard at line 59 still operates on the original coordinate values.
+
+**Fixed:** commit `b24aaa7` — guard moved before the log-transform loop; zero-length-scale dimensions are skipped entirely in the transform (set to 0.0) so `log()` is never called on them. Covered by `test/test_gpkernel.cxx`.
 
 **Cross-reference:** → 02_core_framework.md §GPRegressor / kernel evaluation
 
@@ -38,6 +42,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Initialise `wbin = 0` (or the appropriate underflow bin) at declaration, and add an explicit `found` flag or `break`-with-sentinel after the loop so that an out-of-range `var` falls back to a safe default weight rather than using garbage as an index.
 
+**Fixed:** commit `7b91d96` — `wbin` initialised to `-1`; reweight access guarded by `if(wbin >= 0 && wbin < (int)reweight.size())`. Covered by `test/test_cuts_wbin.cxx`.
+
 **Cross-reference:** → 03_selection_layer.md §get_weight / custom-binning reweighting
 
 ---
@@ -49,6 +55,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The seven `if(index==0){...}` blocks at lines 1130, 1148, 1166, 1179, 1192, 1205, and 1218 are plainly intended to correspond to `index == 0` through `index == 6` (one per goodness-of-fit channel). Because all conditions are identical, each block overwrites the same variables, and the final block — with `userAA_index_hgh = 26` and range 0–2600 MeV — is the one that actually takes effect for every channel. Plots for channels with different kinematic ranges (e.g. the pi-zero channel at lines 1166–1177) are drawn with the wrong axis.
 
 **Fix sketch:** Change the condition of each successive block from `index==0` to `index==1`, `index==2`, ..., `index==6`. Alternatively, use a `switch(index)` statement or a lookup table indexed by channel number to select axis parameters.
+
+**Fixed:** commit `06d1f69` — blocks 2–7 changed to `if(index==1)` … `if(index==6)`. Covered by `test/test_tlee_index.sh`.
 
 **Cross-reference:** → 02_core_framework.md §TLee / goodness-of-fit output
 
