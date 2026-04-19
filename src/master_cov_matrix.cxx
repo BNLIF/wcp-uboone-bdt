@@ -1984,15 +1984,14 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
         std::get<2>(event_info).resize(1000);
         std::get<3>(event_info).push_back(1000);
         if(!(flag_reweight)) reweight = get_weight("add_weight", eval, pfeval, kine, tagger, get_rw_info(true));
+        gRandom->SetSeed((unsigned int)(weight.run * 131071u + weight.event)); // B-01 fix: seed once per event
         for (size_t j=0;j!=1000;j++){
           if(flag_reweight){
             if (weight.weight_cv>0 && reweight!=1){
-              gRandom->SetSeed(j*reweight*77777);
               double rand = gRandom->Gaus(reweight,abs(1-reweight));
               std::get<2>(event_info).at(j) = (rand-reweight)/reweight;
             }else std::get<2>(event_info).at(j) = 0;
           }else{
-            gRandom->SetSeed(j*reweight*77777);
             double rand = gRandom->Gaus(1,abs(1-reweight));
             std::get<2>(event_info).at(j) = rand-1;
           }
@@ -2027,15 +2026,14 @@ std::pair<std::vector<int>, std::vector<int> > LEEana::CovMatrix::get_events_wei
           std::get<2>(event_info).resize(acc_no+1000);
           std::get<3>(event_info).push_back(1000);
           if(!(flag_reweight)) reweight = get_weight("add_weight", eval, pfeval, kine, tagger, get_rw_info(true));
+          gRandom->SetSeed((unsigned int)(weight.run * 131071u + weight.event)); // B-01 fix: seed once per event
           for (size_t j=0;j!=1000;j++){
             if(flag_reweight){
               if (weight.weight_cv>0 && reweight!=1){
-                gRandom->SetSeed(j*reweight*77777);
                 double rand = gRandom->Gaus(reweight,abs(1-reweight));
                 std::get<2>(event_info).at(acc_no+j) = (rand-reweight)/reweight;
               }else std::get<2>(event_info).at(acc_no+j) = 0;
             }else{
-              gRandom->SetSeed(j*reweight*77777);
               double rand = gRandom->Gaus(1,abs(1-reweight));
               std::get<2>(event_info).at(acc_no+j) = rand-1;
             }
