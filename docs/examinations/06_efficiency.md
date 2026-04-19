@@ -6,6 +6,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 
 ### E-01  inc/WCPLEEANA/cuts.h:1635–1720 (`get_cut_pass`)
 
+**Deferred:** The lazy-eval rewrite needs a benchmark confirming the saving outweighs the new per-event struct allocation; per-event hot path must not regress. Requires a timing fixture.
+
 **Impact:** per-event — rebuilds an `O(30)` map on every call; with ~10 M events in a full run the map construction dominates the per-event cost of the selection loop.
 
 **Observation:** `get_cut_pass` constructs a fresh `std::map<std::string, bool> map_cuts_flag` on every invocation (line 1652 onward). Each entry requires a heap-allocated tree node and a string comparison for insertion. The map is then queried by the `ch_name` and `add_cut` strings with further map lookups. The ~30 entries correspond to truth-level flags whose values could be computed lazily only when the relevant channel is queried.
@@ -17,6 +19,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 ---
 
 ### E-02  inc/WCPLEEANA/cuts.h:238–263 (`get_weight` string compare chain)
+
+**Fixed:** commit f027a3d — replaced the 14-branch TString if/else chain with a static `unordered_map<string,int>` dispatch + switch. O(14) string compares → O(1) hash lookup per call. Test: `test/test_get_weight.cxx` (16 doctest cases).
 
 **Impact:** per-event — called at least once per event per systematic variation; a linear scan through ~14 string comparisons for every weight evaluation.
 
@@ -30,6 +34,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 
 ### E-03  src/bayes.cxx:132–154 (`Bayes::add_meas_component` / `do_convolution`)
 
+**Deferred:** Lowering `NPX`/`NofPointsFFT` requires an accuracy budget for credible-interval error < 0.1%; needs physics-owner sign-off before changing.
+
 **Impact:** per-bin in the posterior credible-interval computation — each new measurement component adds a TF1 evaluated at `NPX=60000` points and convolved via FFT with `SetNofPointsFFT(10000)`.
 
 **Observation:** Every call to `add_meas_component` creates a TF1 with `SetNpx(60000)` (line 134, 140, 148) and wraps it in a `TF1Convolution` with `SetNofPointsFFT(10000)` (line 144). A convolution with 10 000 FFT points per TF1 call means that for `N` measurement components the total FFT work is `O(N * 10000 * log(10000))` per bin per credible-interval evaluation. For bins with many Poisson components this is the dominant computational cost.
@@ -41,6 +47,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 ---
 
 ### E-04  src/TLee.cxx:499–529 (`TLee::Set_Variations`)
+
+**Deferred:** Parallelising the toy loop requires a thread-safety audit of `TLee` shared state and ROOT IMT compatibility. `std::async`/OpenMP approach is sound but needs validation with actual multi-channel samples.
 
 **Impact:** per-toy setup — performs a full eigendecomposition of the `bins_newworld × bins_newworld` covariance matrix once before toy generation; this is acceptable, but then generates `num_toy` throws inside the same function call with no parallelism.
 
@@ -54,6 +62,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 
 ### E-05  src/TLee.cxx:247 (`TLee::Set_Collapse` inside Minuit2 FCN)
 
+**Deferred:** Caching the systematic covariance + rank-1 update requires restructuring `Minimization_Lee_strength_FullCov`; large refactor touching the fit core. Needs careful validation against a reference fit result.
+
 **Impact:** per-minimiser-call — `Set_Collapse` rebuilds the collapsed prediction vector and covariance matrix on every function evaluation inside the Minuit2 minimisation loop.
 
 **Observation:** The Minuit2 lambda FCN at line 232 calls `Set_Collapse()` at line 247 on every function evaluation. `Set_Collapse` (defined at line 2218) applies the collapse matrix to the full prediction and covariance, an `O(n_full^2)` operation. With Minuit2/MIGRAD typically requiring hundreds to thousands of function evaluations, and the full covariance being `O(137×137)`, this rebuilds ~18 000-element matrix products per evaluation.
@@ -65,6 +75,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 ---
 
 ### E-06  apps/merge_hist.cxx:80–113 and 128–171 (double pass over input files)
+
+**Deferred (cosmetic only):** The second loop (lines 128–171) does not reopen TFiles — it only iterates the already-loaded `map_name_histogram`. The FD-exhaustion root cause was fixed by B-10 (Wave 2). Merging the loops would be a cosmetic restructuring with <1% speedup.
 
 **Impact:** per-file — the map of input files is iterated twice in sequence; the first pass (lines 80–113) reads POT and histogram metadata, and the second pass (lines 128–171) re-reads histograms already retrieved in the first pass.
 
@@ -78,6 +90,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 
 ### E-07  inc/WCPLEEANA/tagger.h; inc/WCPLEEANA/eval.h; inc/WCPLEEANA/pfeval.h; inc/WCPLEEANA/kine.h; inc/WCPLEEANA/weights.h (`SetBranchAddress` setup)
 
+**Deferred:** Selective branch-disable requires enumerating every address registered by `set_tree_address` across all five headers and adding a `SetBranchStatus("X",1)` call for each. The branch sets are broad (eval.h alone touches flash_*, match_*, truth_*, pl_*, gl_* sub-groups); a partial selective-disable risks silently zeroing un-listed branches at GetEntry time. Needs a per-analysis enable-list audit before changing.
+
 **Impact:** per-file (tree open) — 859 `SetBranchAddress` calls are performed at tree setup time across the five branch-address headers, with `tagger.h` alone contributing 605.
 
 **Observation:** The branch-address setup headers define inline functions that call `tree->SetBranchAddress(name, &field)` for every single field in the struct, including many fields that are never read by the analysis (e.g. the full complement of lol/cosmict/numu sub-scores). ROOT activates all branches for reading when `SetBranchAddress` is called, increasing the per-entry I/O cost proportionally to the number of active branches.
@@ -90,6 +104,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 
 ### E-08  src/mcm_1.h:77–188 (`gen_det_cov_matrix` two-stage bootstrap + amplification)
 
+**Deferred:** Pre-caching per-file histograms before the bootstrap loop is the right fix; requires profiling to confirm stage-1 event-loop dominates and to determine whether the 16 000 amplification throws can be safely reduced.
+
 **Impact:** per-file (covariance matrix computation) — a two-stage Monte Carlo is used: 1 000 bootstrap throws to estimate the mean detector variation, followed by 16 000 amplification throws from the eigenvectors of that estimate. The full bootstrap stage re-fills histograms on every throw.
 
 **Observation:** Stage 1 (lines 77–141) performs 1 000 bootstrap resamples. Each throw calls `fill_det_histograms` (line 85) and then loops over all covariance channels to accumulate the prediction vector `x[i]`. The `fill_det_histograms` call itself iterates over all events for each detector-variation file on every throw, making the total stage-1 cost `O(1000 * N_events * N_files)`. Stage 2 (lines 167–188) draws 16 000 Gaussian throws from the stage-1 covariance eigenvectors; this is purely algebraic (`O(16000 * n^2)` where `n` is the number of bins) and is much cheaper.
@@ -101,6 +117,8 @@ This document catalogues observed performance and resource-use inefficiencies in
 ---
 
 ### E-09  apps/merge_hist.cxx:86; apps/xs_cov_matrix.cxx:190; apps/det_cov_matrix.cxx:147 (`new TFile` inside loops without reuse)
+
+**Deferred (already mitigated):** The primary `merge_hist.cxx` FD accumulation was fixed by B-10 (Wave 2) — `temp_file` is now closed and deleted after each iteration. The `xs_cov_matrix`/`det_cov_matrix` single-file patterns are low priority. RAII wrapping remains a clean-up for a later pass.
 
 **Impact:** per-file — each iteration of the outer loop opens a new ROOT TFile but does not close the previous one, holding all files open simultaneously.
 
