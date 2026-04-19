@@ -72,6 +72,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Add `#pragma once` (or an `#ifndef` guard) at the top of the file. Convert the mutable variables to `extern` declarations in the header and move the definitions to a corresponding `.cxx` file, or make the constants `inline constexpr`.
 
+**Fixed:** commit `212e7f4` — `#pragma once` prepended to `inc/WCPLEEANA/Configure_Lee.h`. The `extern` refactor (converting mutable definitions to a separate `.cxx`) remains deferred pending author input. No test needed (compiler enforces idempotent inclusion).
+
 **Cross-reference:** → 02_core_framework.md §TLee configuration
 
 ---
@@ -97,6 +99,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** `DoDerivative` at line 191 builds `dK` from the current kernel parameters but then immediately uses `fAlpha` and `fKInv`, which are member fields set only by `Solve`. ROOT's `ROOT::Fit::Fitter` (used in `SolveHyperParameters`) typically calls `DoEval` before `DoDerivative` in the same parameter point, but this is a convention, not an API contract. If the optimiser (GSLMultiMin/BFGS2) evaluates gradient-only steps at a new parameter point without a preceding function evaluation, the result is wrong.
 
 **Fix sketch:** Add an explicit `Solve(par)` call at the top of `DoDerivative`, or assert that the current parameter vector matches the one used in the last `Solve` call. Since `Solve` is cheap relative to kernel matrix inversion the simplest fix is unconditional re-solve.
+
+**Deferred:** Adding `Solve(par)` unconditionally doubles the cost of every gradient evaluation in the GP optimiser. Without profiling to confirm this is a real (not hypothetical) bug in ROOT's BFGS2 caller ordering, the fix is too risky to apply silently. Needs profiling or a ROOT-source review before landing.
 
 **Cross-reference:** → 02_core_framework.md §GPRegressor hyper-parameter optimisation
 
@@ -166,6 +170,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Set a `bool converged = false` flag, set it to `true` on normal exit, and check it after the loop to either throw a `std::runtime_error` or return `NaN`/sentinel so the caller can handle non-convergence explicitly.
 
+**Deferred:** Changing the return type/contract of the credible-interval method is an API change — all callers must learn to handle the new failure mode. Needs a coordinated update with author sign-off.
+
 **Cross-reference:** → 02_core_framework.md §Bayes credible interval
 
 ---
@@ -194,6 +200,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Read the POT from the data input file (which already stores it in the `T` tree's `pot` branch, as seen in `merge_hist.cxx:88–90`) and propagate it through the covariance-matrix functions rather than using a literal.
 
+**Deferred:** `5e19` is the Run-1 open-data constant and is the expected normalisation for all existing covariance outputs. Replacing it with a dynamic value would silently shift normalisations for all users unless every downstream consumer is updated simultaneously. Requires author sign-off.
+
 **Cross-reference:** → 02_core_framework.md §CovMatrix POT normalisation
 
 ---
@@ -205,6 +213,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The code partitions the full covariance matrix using `int num_Y = 26+26` (52 nueCC bins) and `137` (total bins including side-bands) at lines 283, 332, and 333. These are arithmetic on the channel layout documented nowhere nearby. Any change to the number of analysis bins (e.g. adding a new sideband channel) requires manual updates in at least three places.
 
 **Fix sketch:** Replace the literals with named constants or compute the values from the actual matrix dimension and the configuration in `Configure_Lee.h`. At minimum, `static_assert` or a runtime check should verify that the hardcoded sum matches the matrix dimensionality.
+
+**Deferred:** `26+26` and `137` are physics channel-layout constants. Changing them without a regression dataset to verify the covariance submatrix slices is unsafe. Needs the channel-layout owner to confirm the correct source of truth.
 
 **Cross-reference:** → 02_core_framework.md §TLee channel layout
 
@@ -218,6 +228,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Pass the bin-edge structure as a parameter to `Matrix_C` or derive it from the input matrix dimensions, and add an assertion that `dim_edges.back() == n`.
 
+**Deferred:** Same rationale as B-15 — `dim_edges` encodes the physics bin layout; changing it without a validated regression dataset is unsafe.
+
 **Cross-reference:** → 04_apps_pipeline.md §WienerSVD unfolding
 
 ---
@@ -229,6 +241,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** All three files contain an identical (or near-identical) multi-hundred-element `std::vector<int>` initialiser for `good_run_list_vec`. There is no shared constant or configuration file. A run added to one list but missed in another produces inconsistent event selections between analysis steps.
 
 **Fix sketch:** Extract the good-run list into a shared header or a plain-text configuration file read at runtime (a format already used elsewhere in the framework for other configuration), and have all three applications read from the single source.
+
+**Deferred:** Requires agreeing on a stable shared-config location and updating three application sources atomically. A 3-file structural refactor beyond the audit's bug scope; deferred pending author decision on the config convention.
 
 **Cross-reference:** → 04_apps_pipeline.md §good-run filtering
 
@@ -242,6 +256,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Convert the relevant flag fields to `int` or `bool`, or replace floating-point equality tests with a small-epsilon comparison or an explicit cast, e.g. `static_cast<int>(tagger_info.cosmict_flag) == 0`.
 
+**Deferred:** The `float == 0` pattern occurs across every cut predicate in `cuts.h` and `tagger.h`. A meaningful fix requires a full-file sweep rather than a single-line patch, and the risk of accidentally altering a cut boundary is non-trivial. Deferred pending a dedicated sweep with author review.
+
 **Cross-reference:** → 03_selection_layer.md §numuCC cut-based selection
 
 ---
@@ -253,6 +269,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** At line 192, `cov_xs_mat->Write(Form("cov_xf_mat_%d",run))` and `frac_cov_xs_mat->Write(Form("frac_cov_xf_mat_%d",run))` at line 193 use the key suffix `xf` (matching the flux-covariance naming convention) rather than `xs`. Variable and comment context surrounding the block make clear this file is the cross-section covariance output. If downstream analysis reads `"cov_xs_mat_%d"` it will silently fail to find the matrix.
 
 **Fix sketch:** Change the format string from `"cov_xf_mat_%d"` to `"cov_xs_mat_%d"` (and similarly for `frac_cov_xf_mat`) to match the cross-section context, and verify all downstream readers use the same key.
+
+**Deferred:** `frac_cov_xf_mat_N` is the de-facto convention read by ~12 consumers across `LEEana/wiener_svd/`, `plot_script/`, `unfolding_workshop/`, and `matrix_op/`. Renaming the key without updating all consumers simultaneously would silently break every downstream analysis. Needs a coordinated multi-repo update.
 
 **Cross-reference:** → 04_apps_pipeline.md §xs_cov_matrix
 
@@ -266,6 +284,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Change the key type of `map_re_entry_cv` and `map_re_entry_det` to `std::tuple<int,int,int>` keyed on `(run, subrun, event)` and update the fill and lookup sites accordingly.
 
+**Deferred:** Changing the match key alters which CV/det events pair up, which is a physics-correctness question that needs validation against a CV-vs-det sample. Cannot be verified without running the actual detector-variation workflow.
+
 **Cross-reference:** → 04_apps_pipeline.md §merge_det event matching
 
 ---
@@ -277,6 +297,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** At line 133, the comment reads `// 25% uncertainties ...` and sets `(*frac_cov_det_mat)(i,j) = 1./16.` for the `i==j` case. This is a placeholder that assigns a fixed 25% fractional uncertainty to any zero-prediction bin with a non-zero covariance entry, without physical motivation or traceability to the actual detector variation amplitude.
 
 **Fix sketch:** Replace the literal with either a configurable parameter or a physics-motivated estimate derived from the non-zero neighbouring bins. At minimum, document in a comment why 25% is appropriate for these bins and under which run conditions.
+
+**Deferred:** The 25% floor is a physics placeholder that may or may not be correct. Replacing it requires a systematics owner to confirm the appropriate treatment for zero-prediction bins. Not safe to change without that sign-off.
 
 **Cross-reference:** → 04_apps_pipeline.md §det_cov_matrix
 
@@ -320,6 +342,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Either implement the function or mark it `[[deprecated]]` / remove it and its declaration, replacing any call sites with a direct call to the equivalent logic in `Set_Spectra_MatrixCov`.
 
+**Deferred:** It is unclear whether `Set_TransformMatrix` should be implemented, deprecated, or removed — only the author knows the intended use. Removing it risks breaking external callers; implementing it risks silently changing analysis behaviour. Needs author intent before any change.
+
 **Cross-reference:** → 02_core_framework.md §TLee matrix setup
 
 ---
@@ -331,6 +355,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The variable `test_wiener` (line 190) controls an alternate Wiener-filter computation path but is hard-set to `false` with no compile-time or runtime switch. The dead code branch is never exercised, making it effectively unmaintained.
 
 **Fix sketch:** Either remove the `test_wiener` branch entirely (if no longer needed) or expose it as a function parameter or preprocessor flag so it can be activated without source edits.
+
+**Deferred:** Same ambiguity as B-24 — only the author knows whether the branch should be removed or activated. Removing dead code without understanding why it was disabled is risky.
 
 **Cross-reference:** → 04_apps_pipeline.md §WienerSVD
 
