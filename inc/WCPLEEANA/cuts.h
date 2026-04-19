@@ -206,13 +206,13 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
         bool equal_binning = std::get<7>(rw_info_i);
         std::vector<double> reweight = std::get<8>(rw_info_i);
 
-        int wbin;
         bool flag_pass = get_rw_cut_pass(cut_str, eval, pfeval, tagger, kine);
         if (flag_pass){
           if (var>max_var && overflow) addtl_weight = reweight.back();
           else if(var>max_var) addtl_weight = 1;
           else if (var<min_var && underflow) addtl_weight = reweight[0];
           else if (var>min_var){
+            int wbin = -1;  // B-03 fix: initialise; -1 = no bin matched
             if(equal_binning){
               double bin_len = (max_var-min_var)/reweight.size();
               if(underflow && overflow) bin_len = (max_var-min_var)/(reweight.size()-2);
@@ -220,7 +220,7 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
               wbin = floor((var-min_var)/bin_len);
             }else{
               std::vector<double> bins = std::get<9>(rw_info_i);
-              for(int b=0; b<bins.size()-1; b++){
+              for(int b=0; b<(int)bins.size()-1; b++){
                 if(var<=bins[b+1] && var>bins[b]){
                   wbin = b;
                   break;
@@ -228,7 +228,8 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
               }
             }
             if(underflow) wbin++;
-            addtl_weight *= reweight[wbin];
+            if(wbin >= 0 && wbin < (int)reweight.size())
+              addtl_weight *= reweight[wbin];
           }
         }
       }
