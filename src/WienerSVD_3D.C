@@ -281,7 +281,6 @@ std::cout << "current bin = " << current_bin << std::endl;
 
 //main function to compute C3 regularization matrix using the full 3D bin structure
 TMatrixD C3_3D (int ndim) {
-std::cout << "here 1" << std::endl;
 
   Double_t epsilon = 1e-2;
   int nbins_tot = -1;
@@ -298,31 +297,21 @@ std::cout << "here 1" << std::endl;
   //take derivative along Enu, theta, and Pmu
   int dim_max = 3;
   int dim_min = dim_max-ndim;
-std::cout << "nbins_tot, dim_min = " << nbins_tot << ",  " << dim_min << std::endl;
   for (int dim=dim_min;dim<dim_max;dim++) {
-std::cout << "dim = " << dim << std::endl;
     TMatrixD C_temp(nbins_tot,nbins_tot);
 
     //iterate over 36 (2D) or 138 (3D) truth signal bins and compute 3rd derivative for each
     for (int start_bin=0;start_bin<nbins_tot;start_bin++) {
-std::cout << "start_bin = " << start_bin << std::endl;
       //set matrix to 0 initially
       for (int j=0;j<nbins_tot;j++) { C_temp(start_bin,j) = 0; }
 
-std::cout << "here 1.1" << std::endl;
       int prev_bin  = get_next_bin(ndim,start_bin, dim, false);
-std::cout << "here 1.2" << std::endl;
       int prev_bin2 = get_next_bin(ndim,prev_bin,  dim, false);
-std::cout << "here 1.3" << std::endl;
       int next_bin  = get_next_bin(ndim,start_bin, dim, true);
-std::cout << "here 1.4" << std::endl;
       int next_bin2 = get_next_bin(ndim,next_bin,  dim, true);
-std::cout << "here 1.5" << std::endl;
 
       int nbins_prev = get_nbins_next(ndim,start_bin,dim,false);
-std::cout << "here 1.6" << std::endl;
       int nbins_next = get_nbins_next(ndim,start_bin,dim,true);
-std::cout << "here 1.7" << std::endl;
 
       //Old C3 matrix
       if (nbins_prev>=2 && nbins_next>=2) {

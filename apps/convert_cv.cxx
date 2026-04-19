@@ -543,8 +543,8 @@ int main( int argc, char** argv )
     for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
       if (map_re_entry_cv.find(*it1) == map_re_entry_cv.end()) failed_num++;
     }
-    if (failed_num > it->second.size() * fail_percentage && failed_num !=1
-	|| failed_num > it->second.size() * 0.33 && failed_num==1){
+    if ((failed_num > it->second.size() * fail_percentage && failed_num !=1)
+	|| (failed_num > it->second.size() * 0.33 && failed_num==1)){
       remove_set.insert(it->first);
     }
     map_rs_failed[it->first] = failed_num;
