@@ -13,6 +13,7 @@
 #include "pfeval.h"
 
 #include <map>
+#include <unordered_map>
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -236,35 +237,43 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
     }
   }
   
-  if (weight_name == "cv_spline"){
-    return addtl_weight*eval.weight_cv * eval.weight_spline;
-  }else if (weight_name == "cv_spline_cv_spline"){
-    return pow(addtl_weight*eval.weight_cv * eval.weight_spline,2);
-  }else if (weight_name == "unity" || weight_name == "unity_unity"){
+  static const std::unordered_map<std::string,int> wmap = {
+    {"cv_spline",                    1},
+    {"cv_spline_cv_spline",          2},
+    {"unity",                        3},
+    {"unity_unity",                  3},
+    {"lee_cv_spline",                4},
+    {"lee_cv_spline_lee_cv_spline",  5},
+    {"lee_cv_spline_cv_spline",      6},
+    {"cv_spline_lee_cv_spline",      6},
+    {"spline",                       7},
+    {"spline_spline",                8},
+    {"lee_spline",                   9},
+    {"lee_spline_lee_spline",       10},
+    {"lee_spline_spline",           11},
+    {"spline_lee_spline",           11},
+    {"add_weight",                  12},
+  };
+  auto wit = wmap.find(weight_name.Data());
+  if (wit == wmap.end()) {
+    std::cout << "Unknown weights: " << weight_name << std::endl;
     return 1;
-  }else if (weight_name == "lee_cv_spline"){
-    return (eval.weight_lee * addtl_weight*eval.weight_cv * eval.weight_spline);
-  }else if (weight_name == "lee_cv_spline_lee_cv_spline"){
-    return pow(eval.weight_lee * addtl_weight*eval.weight_cv * eval.weight_spline,2);
-  }else if (weight_name == "lee_cv_spline_cv_spline" || weight_name == "cv_spline_lee_cv_spline"){
-    return eval.weight_lee * pow(addtl_weight*eval.weight_cv * eval.weight_spline,2);
-  }else if (weight_name == "spline"){
-    return eval.weight_spline;
-  }else if (weight_name == "spline_spline"){
-    return pow(eval.weight_spline,2);
-  }else if (weight_name == "lee_spline"){
-    return (eval.weight_lee * eval.weight_spline);
-  }else if (weight_name == "lee_spline_lee_spline"){
-    return pow(eval.weight_lee * eval.weight_spline,2);
-  }else if (weight_name == "lee_spline_spline" || weight_name == "spline_lee_spline"){
-    return eval.weight_lee * pow( eval.weight_spline,2);
-  }else if (weight_name == "add_weight"){//for systematics
-    return addtl_weight;
-  }else{
-    std::cout <<"Unknown weights: " << weight_name << std::endl;
   }
-	    
-  
+  const double cv = addtl_weight * eval.weight_cv * eval.weight_spline;
+  switch (wit->second) {
+    case  1: return cv;
+    case  2: return pow(cv,2);
+    case  3: return 1;
+    case  4: return eval.weight_lee * cv;
+    case  5: return pow(eval.weight_lee * cv,2);
+    case  6: return eval.weight_lee * pow(cv,2);
+    case  7: return eval.weight_spline;
+    case  8: return pow(eval.weight_spline,2);
+    case  9: return eval.weight_lee * eval.weight_spline;
+    case 10: return pow(eval.weight_lee * eval.weight_spline,2);
+    case 11: return eval.weight_lee * pow(eval.weight_spline,2);
+    case 12: return addtl_weight;
+  }
   return 1;
 }
 
