@@ -1127,105 +1127,105 @@ int TLee::Exe_Goodness_of_fit(int num_Y, int num_X, TMatrixD matrix_pred, TMatri
   line_FC_PC->SetLineWidth(4);
   //line_FC_PC->SetLineStyle(7);
 
-  if( index==0 ) {    
+  if( index==0 ) {    // B-04 fix: each block now tests its own channel index
     flag_axis_userAA = 1;
     flag_axis_userAB = 1;
 
     title_axis_user = "Reco neutrino energy (MeV)";
     axis_user_divisions = 503;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 26;
     userAA_value_low = 0;
     userAA_value_hgh = 2600;
-    
+
     userAB_index_low = 26;
     userAB_index_hgh = 52;
     userAB_value_low = 0;
-    userAB_value_hgh = 2600;    
+    userAB_value_hgh = 2600;
   }
 
-  if( index==0 ) {    
+  if( index==1 ) {
     flag_axis_userAA = 1;
     flag_axis_userAB = 1;
 
     title_axis_user = "Reco neutrino energy (MeV)";
     axis_user_divisions = 504;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 31;
     userAA_value_low = 0;
     userAA_value_hgh = 3100;
-    
+
     userAB_index_low = 31;
     userAB_index_hgh = 62;
     userAB_value_low = 0;
-    userAB_value_hgh = 3100;    
+    userAB_value_hgh = 3100;
   }
 
-  if( index==0 ) {
+  if( index==2 ) {
     flag_axis_userAA = 1;
     flag_axis_userAB = 0;
 
     title_axis_user = "Reco kinetic energy of #pi^{0} (MeV)";
     axis_user_divisions = 508;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 11;
     userAA_value_low = 0;
-    userAA_value_hgh = 1100;    
+    userAA_value_hgh = 1100;
   }
-  
-  if( index==0 ) {
+
+  if( index==3 ) {
     flag_axis_userAA = 1;
     flag_axis_userAB = 0;
 
     title_axis_user = "Reco neutrino energy (MeV)";
     axis_user_divisions = 508;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 26;
     userAA_value_low = 0;
-    userAA_value_hgh = 2600;    
+    userAA_value_hgh = 2600;
   }
-   
-  if( index==0 ) {
+
+  if( index==4 ) {
     flag_axis_userAA = 1;
     flag_axis_userAB = 0;
 
     title_axis_user = "Reco neutrino energy (MeV)";
     axis_user_divisions = 508;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 18;
     userAA_value_low = 800;
-    userAA_value_hgh = 2600;    
+    userAA_value_hgh = 2600;
   }
-  
-  if( index==0 ) {
+
+  if( index==5 ) {
     flag_axis_userAA = 1;
     flag_axis_userAB = 0;
 
     title_axis_user = "Reco neutrino energy (MeV)";
     axis_user_divisions = 508;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 8;
     userAA_value_low = 0;
-    userAA_value_hgh = 800;    
+    userAA_value_hgh = 800;
   }
-    
-  if( index==0 ) {
+
+  if( index==6 ) {
     flag_axis_userAA = 1;
     flag_axis_userAB = 0;
 
     title_axis_user = "Reco neutrino energy (MeV)";
     axis_user_divisions = 508;
-      
+
     userAA_index_low = 0;
     userAA_index_hgh = 26;
     userAA_value_low = 0;
-    userAA_value_hgh = 2600;    
+    userAA_value_hgh = 2600;
   }
   
   
