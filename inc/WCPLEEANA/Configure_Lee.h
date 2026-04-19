@@ -1,3 +1,5 @@
+#pragma once
+
 namespace config_Lee
 {
   ////////// input files for spectra and covariance matrixes
