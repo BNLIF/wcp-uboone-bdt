@@ -6,7 +6,7 @@ This document catalogues observed performance and resource-use inefficiencies in
 
 ### E-01  inc/WCPLEEANA/cuts.h:1635–1720 (`get_cut_pass`)
 
-**Deferred:** The lazy-eval rewrite needs a benchmark confirming the saving outweighs the new per-event struct allocation; per-event hot path must not regress. Requires a timing fixture.
+**Fixed (partial):** commit Wave 7 — `std::map<std::string,bool>` swapped to `std::unordered_map<std::string,bool>` with `reserve(64)` at `cuts.h:1662`. Drop-in replacement; O(N log N) tree-node cost per call reduced to O(N) hash inserts. Covered by `test/test_get_cut_pass.cxx`. The deeper enum-indexed-array rewrite (avoiding per-call heap allocation entirely) remains deferred pending a timing benchmark.
 
 **Impact:** per-event — rebuilds an `O(30)` map on every call; with ~10 M events in a full run the map construction dominates the per-event cost of the selection loop.
 

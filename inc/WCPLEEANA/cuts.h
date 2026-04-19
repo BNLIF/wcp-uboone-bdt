@@ -1659,7 +1659,8 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
   if (eval.truth_vtxX > -1 && eval.truth_vtxX <= 254.3 &&  eval.truth_vtxY >-115.0 && eval.truth_vtxY<=117.0 && eval.truth_vtxZ > 0.6 && eval.truth_vtxZ <=1036.4) flag_truth_inside = true;
 
   // definition of additional cuts
-  std::map<std::string, bool> map_cuts_flag;
+  std::unordered_map<std::string, bool> map_cuts_flag;
+  map_cuts_flag.reserve(64);
   if(is_far_sideband(kine, tagger, flag_data)) map_cuts_flag["farsideband"] = true; 
   else map_cuts_flag["farsideband"] = false; 
   
