@@ -148,7 +148,7 @@ int main( int argc, char** argv )
   vec_mean->Write(Form("vec_mean_%d",run));
   vec_mean_diff->Write(Form("vec_mean_diff_%d",run));
   
-  cov_mat_bootstrapping->Write(Form("cov_mat_boostrapping_%d",run));
+  cov_mat_bootstrapping->Write(Form("cov_mat_bootstrapping_%d",run));
   cov_det_mat->Write(Form("cov_det_mat_%d",run));
   frac_cov_det_mat->Write(Form("frac_cov_det_mat_%d",run));
   

@@ -64,8 +64,9 @@ int main(int argc, char** argv){
     for (Int_t i=0;i!=T_pot->GetEntries();i++){
       T_pot->GetEntry(i);
       auto it = map_bnb_infos.find(std::make_pair(pot.runNo, pot.subRunNo));
-      if (it == map_bnb_infos.end() && pot.runNo >=4000  && pot.runNo <= 50000){
-	std::cout << "Run: " << pot.runNo << " subRun: " << pot.subRunNo << " not found!" << std::endl;
+      if (it == map_bnb_infos.end()){
+        if (pot.runNo >=4000  && pot.runNo <= 50000)
+	  std::cout << "Run: " << pot.runNo << " subRun: " << pot.subRunNo << " not found!" << std::endl;
       }else{
 	total_bnb_trigger_no += it->second.first * pass_ratio;
 	total_bnb_pot += it->second.second * pass_ratio;
@@ -97,8 +98,9 @@ int main(int argc, char** argv){
       T_pot->GetEntry(i);
       auto it = map_extbnb_infos.find(std::make_pair(pot.runNo, pot.subRunNo));
       
-      if (it == map_extbnb_infos.end()  && pot.runNo >=4000  && pot.runNo <= 50000){
-	std::cout << "Run: " << pot.runNo << " subRun: " << pot.subRunNo << "  not found!" << std::endl;
+      if (it == map_extbnb_infos.end()){
+        if (pot.runNo >=4000  && pot.runNo <= 50000)
+	  std::cout << "Run: " << pot.runNo << " subRun: " << pot.subRunNo << "  not found!" << std::endl;
       }else{
 	total_extbnb_trigger_no += it->second * pass_ratio;
       }

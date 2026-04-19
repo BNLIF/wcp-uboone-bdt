@@ -68,7 +68,7 @@ int main( int argc, char** argv )
     }break;
     case 's':{
       TString sss = argv[i];
-      cov_inputfile = sss(2, sss.Length()-2);
+      cov_inputfile = sss(2, sss.Length());
     }break;
     case 'c':{
       flag_check = atoi(&argv[i][2]);

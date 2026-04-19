@@ -190,7 +190,7 @@ int main( int argc, char** argv )
       // cout << mcweight_filled << endl;
       if (SaveGenieFluxKnob=="UBGenieFluxSmallUni") {
         for(auto const& knob: UBGenieFluxSmallUni) {
-          // weight_f1->push_back(mcweight->at(knob));
+          if (mcweight->find(knob) == mcweight->end()) continue; // L-05 fix: skip missing knobs
           weight_f1.at(knob) = mcweight->at(knob);
 
           for (auto const& w: weight_f1.at(knob)) {
@@ -199,7 +199,8 @@ int main( int argc, char** argv )
         }
       }
       else {
-         weight_f2 = mcweight->at(SaveGenieFluxKnob);
+         if (mcweight->find(SaveGenieFluxKnob) == mcweight->end()) { weight_f2.clear(); } // L-05 fix
+         else weight_f2 = mcweight->at(SaveGenieFluxKnob);
 
          for (auto const& w: weight_f2) {
            hwmap.at(SaveGenieFluxKnob)->Fill(w);
