@@ -84,6 +84,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Either uncomment and rely solely on the `f_conv_vec` deletion loop (and set `f_conv` to `nullptr` before the destructor finishes so the separate guard at line 38 becomes a no-op), or stop storing intermediate TF1 objects in `f_conv_vec` at all and rely exclusively on the `conv_vec` + single `f_conv` cleanup path.
 
+**Fixed:** commit `7e4fa66` — `f_conv_vec` deletion loop uncommented; `f_conv = nullptr` added before the existing `delete f_conv` guard so it becomes a no-op, preventing double-free. Covered by `test/test_remaining_bugs.sh` (B-06).
+
 **Cross-reference:** → 02_core_framework.md §Bayes posterior calculation
 
 ---
@@ -108,6 +110,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Replace `new double[n]` with `std::vector<double> par(n)` and pass `par.data()` to `SetFCN`, which eliminates the manual allocation entirely.
 
+**Fixed:** commit `7e4fa66` — `double* par = new double[n]` replaced with `std::vector<double> par(n)`; `SetFCN` called with `par.data()`. Covered by `test/test_remaining_bugs.sh` (B-08).
+
 **Cross-reference:** → 02_core_framework.md §GPRegressor
 
 ---
@@ -119,6 +123,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** `TDecompSVD` can fail (rank-deficient or ill-conditioned input) and signals this through its return value from `Decompose()`. The code calls `decV.GetSig()`, `udv.GetU()`, etc., unconditionally. ROOT's lazy decomposition means these getters implicitly trigger decomposition; if it fails the returned matrices contain undefined values which then silently propagate to the unfolded spectrum.
 
 **Fix sketch:** Call `decV.Decompose()` (and `udv.Decompose()`) explicitly, check the `bool` return, and throw an exception or print a meaningful error and return a sentinel if decomposition fails.
+
+**Fixed:** commit `7e4fa66` — both `decV.Decompose()` and `udv.Decompose()` are now called explicitly; on failure a `std::cerr` message is printed and `TVectorD(n)` is returned. Covered by `test/test_remaining_bugs.sh` (B-09-decV, B-09-udv).
 
 **Cross-reference:** → 04_apps_pipeline.md §WienerSVD unfolding
 
@@ -132,6 +138,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Add `if (temp_file) { temp_file->Close(); delete temp_file; }` before the `new TFile(...)` assignment, or use a RAII wrapper (`std::unique_ptr<TFile>` with a custom deleter).
 
+**Fixed:** commit `7e4fa66` — each histogram is detached via `SetDirectory(nullptr)` after `Get()`, then `temp_file->Close(); delete temp_file; temp_file = nullptr;` is called at the end of each per-file block. Covered by `test/test_remaining_bugs.sh` (B-10).
+
 **Cross-reference:** → 04_apps_pipeline.md §merge_hist
 
 ---
@@ -143,6 +151,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The `KineInfo` struct stores these as raw `std::vector<...>*` pointers. `clear_kine_info` is called before each tree entry is read; if a `KineInfo` instance is ever used before its branch addresses are wired (or if a branch is absent in a particular file), the pointers are uninitialised, and `->clear()` is undefined behaviour.
 
 **Fix sketch:** Add null-pointer guards (`if (ptr) ptr->clear();`) around each pointer dereference, or initialise all pointer members to `nullptr` in a constructor or `init_pointers` helper.
+
+**Fixed:** commit `7e4fa66` — all four `->clear()` calls in `clear_kine_info` wrapped with `if (ptr)` null guards. Covered by `test/test_remaining_bugs.sh` (B-11).
 
 **Cross-reference:** → 03_selection_layer.md §KineInfo branch setup
 
@@ -167,6 +177,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** `std::istream::eof()` is set only *after* a read that hits the end-of-file, not before it. The standard anti-pattern `while(!infile.eof())` therefore enters the loop one extra time after the last successful read; the failed `infile >> tmp_type >> run >> subrun` leaves the variables unchanged from the previous iteration, so that record is inserted again, potentially inflating the training/test set with a duplicate entry.
 
 **Fix sketch:** Replace `while(!infile.eof())` with `while(infile >> tmp_type >> run >> subrun)`, which checks the stream state after each read and exits cleanly at EOF.
+
+**Fixed:** commit `7e4fa66` — `while(!infile.eof())` replaced with `while(infile >> tmp_type >> run >> subrun)`. Covered by `test/test_remaining_bugs.sh` (B-13).
 
 **Cross-reference:** → 04_apps_pipeline.md §bdt_convert
 
@@ -280,6 +292,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Correct the typo in `Util.cxx` to `MatrixMatrix`.
 
+**Fixed:** commit `c130e78` — definition renamed from `MatrixMatirx` to `MatrixMatrix` in `src/Util.cxx`. No test needed (compiler would catch any remaining mismatch at link time).
+
 **Cross-reference:** → 02_core_framework.md §Util helpers
 
 ---
@@ -291,6 +305,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** `Exe_Fiedman_Cousins_Data` (line 44) transposes `el` → `ie`, and `Exe_Fledman_Cousins_Asimov` (line 98) drops the `a`. These are callable entry points whose names appear in external scripts or Makefile targets; any caller using the correct spelling "Feldman" will fail to link.
 
 **Fix sketch:** Rename both methods to `Exe_Feldman_Cousins_Data` and `Exe_Feldman_Cousins_Asimov` respectively, updating all call sites.
+
+**Fixed:** commit `1ce784b` — renamed at all six sites: header declaration (`TLee.h`), definitions (`TLee.cxx:44,98`), and two call sites in `read_TLee_v20.cxx`. External scripts outside this repo using the old spelling must be updated manually. Covered by `test/test_feldman_rename.sh`.
 
 **Cross-reference:** → 02_core_framework.md §TLee Feldman-Cousins
 
@@ -327,5 +343,7 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** Multiple inclusion of `bdt.h` would produce redeclaration errors for the function prototypes inside `namespace LEEana`. The file is currently included in a controlled way, but the absence of a guard is a maintenance hazard.
 
 **Fix sketch:** Add `#pragma once` at the top of the file.
+
+**Fixed:** commit `c130e78` — `#pragma once` prepended to `inc/WCPLEEANA/bdt.h`. No test needed (compiler enforces idempotent inclusion).
 
 **Cross-reference:** → 03_selection_layer.md §BDT score evaluation
