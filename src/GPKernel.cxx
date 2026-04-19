@@ -44,21 +44,31 @@ double RBFKernel::Mag(GPPoint p1, GPPoint p2) const {
   double* p1x = p1.X();
   double* p2x = p2.X();
   double mag = 0;
+
+  // Guard uses original coordinates before any log transform (B-02 fix).
+  // Zero-length-scale dimensions with different values → infinite separation.
+  for (int i=0;i<5;i++) { if (GPKernel::fPars[i]==0 && p1x[i]!=p2x[i]) { return 1e6; } }
+
   std::vector<double> parameters;
+  double lp1x[5], lp2x[5];
   //use log scales for fractional smoothing (ie: 20%)
   for (int i=0;i<5;i++) {
-    if (doLogScales[i]) {
-      p1x[i] = log(p1x[i]);
-      p2x[i] = log(p2x[i]);
+    if (GPKernel::fPars[i]==0) {
+      // Zero length scale: identical values guaranteed by guard above; skip.
+      lp1x[i] = lp2x[i] = 0.0;
+      parameters.push_back(1.0);  // unused; division avoided by lp1x==lp2x
+    } else if (doLogScales[i]) {
+      lp1x[i] = log(p1x[i]);
+      lp2x[i] = log(p2x[i]);
       parameters.push_back(log(fPars[i]));
     } else {
+      lp1x[i] = p1x[i];
+      lp2x[i] = p2x[i];
       parameters.push_back(fPars[i]);
     }
   }
-  //don't smooth between points with different values along a dimension with length scale 0
-  for (int i=0;i<5;i++) { if (GPKernel::fPars[i]==0 && p1x[i]!=p2x[i]) { return 1e6; } }
   //compute the non-euclidean distance between two points
-  for (int i=0;i<5;i++) { if (p1x[i]!=p2x[i]) { mag += TMath::Power((p1x[i]-p2x[i])/parameters[i], 2); } }
+  for (int i=0;i<5;i++) { if (lp1x[i]!=lp2x[i]) { mag += TMath::Power((lp1x[i]-lp2x[i])/parameters[i], 2); } }
 
   return mag;
 };
