@@ -65,6 +65,11 @@ public:
     flag_individual_cov_newworld = true;
     flag_Lee_minimization_after_constraint = false;
 
+    flag_syst_flux_Xs    = false;
+    flag_syst_detector   = false;
+    flag_syst_additional = false;
+    flag_syst_mc_stat    = false;
+    
     flag_lookelsewhere = false;
   }
 
@@ -79,8 +84,6 @@ public:
   bool flag_syst_detector;
   bool flag_syst_additional;
   bool flag_syst_mc_stat;
-  bool flag_syst_reweight;
-  bool flag_syst_reweight_cor;
 
   bool flag_lookelsewhere;
   
@@ -112,8 +115,6 @@ public:
   TMatrixD matrix_input_cov_flux_Xs;  
   TMatrixD matrix_input_cov_detector;
   TMatrixD matrix_input_cov_additional;
-  TMatrixD matrix_input_cov_reweight;
-  TMatrixD matrix_input_cov_reweight_cor;
 
   TMatrixD matrix_input_cov_flux;
   TMatrixD matrix_input_cov_Xs;
@@ -136,8 +137,6 @@ public:
   map<int, TMatrixD>matrix_absolute_detector_sub_cov_newworld;
   TMatrixD matrix_absolute_mc_stat_cov_newworld;
   TMatrixD matrix_absolute_additional_cov_newworld;
-  TMatrixD matrix_absolute_reweight_cov_newworld;
-  TMatrixD matrix_absolute_reweight_cor_cov_newworld;
   
   map<int, TMatrixD>matrix_sub_flux_geant4_Xs_oldworld;
   map<int, TMatrixD>matrix_sub_flux_geant4_Xs_newworld;
@@ -199,8 +198,8 @@ public:
   
   // Feldman-Cousins approach
   void Exe_Feldman_Cousins(double Lee_true_low, double Lee_true_hgh, double step, int num_toy, int ifile);
-  void Exe_Feldman_Cousins_Asimov(double Lee_true_low, double Lee_true_hgh, double step);
-  void Exe_Feldman_Cousins_Data(TMatrixD matrix_fakedata, double Lee_true_low, double Lee_true_hgh, double step);
+  void Exe_Fledman_Cousins_Asimov(double Lee_true_low, double Lee_true_hgh, double step);
+  void Exe_Fiedman_Cousins_Data(TMatrixD matrix_fakedata, double Lee_true_low, double Lee_true_hgh, double step);
 };
 
 #endif
