@@ -14,6 +14,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Replace the per-universe seed with a single seed set once before the loop (e.g. `gRandom->SetSeed(run_number * 131071 + systematic_index)`) and let `gRandom->Gaus()` advance the state naturally across universes. Alternatively, construct a `TRandom3` with seed 0 (clock-based) once and draw from it inside the loop without re-seeding.
 
+**Fixed:** commit `d99fa05` — seed moved before the universe loop using `(unsigned int)(weight.run * 131071u + weight.event)`; both the `"reweight"` and `"UBGenieFluxSmallUni"` branches updated. Covered by `test/test_master_cov_seeds.sh`.
+
 **Cross-reference:** → 02_core_framework.md §CovMatrix / systematic universe construction
 
 ---
@@ -25,6 +27,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** Lines 50–52 overwrite `p1x[i]` and `p2x[i]` with their logarithms in place; the guard `if (GPKernel::fPars[i]==0 && p1x[i]!=p2x[i])` at line 59 is then comparing log-transformed coordinates. For a dimension whose scale is zero (disabled), the equality `p1x[i] != p2x[i]` is evaluated on the log values, not the originals, so two points that originally differed only in a log-scale dimension will give the wrong early-exit result of `1e6`. Because `GPPoint` is passed by value, the mutation is confined to local copies and does not corrupt training-set coordinates across calls; the damage is limited to incorrect early-exit logic within the affected call.
 
 **Fix sketch:** Apply the log transformation into a separate local array rather than overwriting `p1x` and `p2x`, so the dimension-zero guard at line 59 still operates on the original coordinate values.
+
+**Fixed:** commit `b24aaa7` — guard moved before the log-transform loop; zero-length-scale dimensions are skipped entirely in the transform (set to 0.0) so `log()` is never called on them. Covered by `test/test_gpkernel.cxx`.
 
 **Cross-reference:** → 02_core_framework.md §GPRegressor / kernel evaluation
 
@@ -38,6 +42,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Initialise `wbin = 0` (or the appropriate underflow bin) at declaration, and add an explicit `found` flag or `break`-with-sentinel after the loop so that an out-of-range `var` falls back to a safe default weight rather than using garbage as an index.
 
+**Fixed:** commit `7b91d96` — `wbin` initialised to `-1`; reweight access guarded by `if(wbin >= 0 && wbin < (int)reweight.size())`. Covered by `test/test_cuts_wbin.cxx`.
+
 **Cross-reference:** → 03_selection_layer.md §get_weight / custom-binning reweighting
 
 ---
@@ -49,6 +55,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The seven `if(index==0){...}` blocks at lines 1130, 1148, 1166, 1179, 1192, 1205, and 1218 are plainly intended to correspond to `index == 0` through `index == 6` (one per goodness-of-fit channel). Because all conditions are identical, each block overwrites the same variables, and the final block — with `userAA_index_hgh = 26` and range 0–2600 MeV — is the one that actually takes effect for every channel. Plots for channels with different kinematic ranges (e.g. the pi-zero channel at lines 1166–1177) are drawn with the wrong axis.
 
 **Fix sketch:** Change the condition of each successive block from `index==0` to `index==1`, `index==2`, ..., `index==6`. Alternatively, use a `switch(index)` statement or a lookup table indexed by channel number to select axis parameters.
+
+**Fixed:** commit `06d1f69` — blocks 2–7 changed to `if(index==1)` … `if(index==6)`. Covered by `test/test_tlee_index.sh`.
 
 **Cross-reference:** → 02_core_framework.md §TLee / goodness-of-fit output
 
@@ -64,6 +72,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Add `#pragma once` (or an `#ifndef` guard) at the top of the file. Convert the mutable variables to `extern` declarations in the header and move the definitions to a corresponding `.cxx` file, or make the constants `inline constexpr`.
 
+**Fixed:** commit `212e7f4` — `#pragma once` prepended to `inc/WCPLEEANA/Configure_Lee.h`. The `extern` refactor (converting mutable definitions to a separate `.cxx`) remains deferred pending author input. No test needed (compiler enforces idempotent inclusion).
+
 **Cross-reference:** → 02_core_framework.md §TLee configuration
 
 ---
@@ -75,6 +85,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** In `add_meas_component` (line 151), every new convolution TF1 is appended to `f_conv_vec` and `f_conv` is updated to point to the most recently created element. The destructor (lines 30–32) has the entire `f_conv_vec` deletion loop commented out, but line 38 still calls `delete f_conv`. The pointer `f_conv` is therefore the only remaining reference deleted at destruction; the intermediate entries in `f_conv_vec` (all except the last) leak memory. If the comment were re-enabled, the final element would be deleted twice.
 
 **Fix sketch:** Either uncomment and rely solely on the `f_conv_vec` deletion loop (and set `f_conv` to `nullptr` before the destructor finishes so the separate guard at line 38 becomes a no-op), or stop storing intermediate TF1 objects in `f_conv_vec` at all and rely exclusively on the `conv_vec` + single `f_conv` cleanup path.
+
+**Fixed:** commit `7e4fa66` — `f_conv_vec` deletion loop uncommented; `f_conv = nullptr` added before the existing `delete f_conv` guard so it becomes a no-op, preventing double-free. Covered by `test/test_remaining_bugs.sh` (B-06).
 
 **Cross-reference:** → 02_core_framework.md §Bayes posterior calculation
 
@@ -88,6 +100,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Add an explicit `Solve(par)` call at the top of `DoDerivative`, or assert that the current parameter vector matches the one used in the last `Solve` call. Since `Solve` is cheap relative to kernel matrix inversion the simplest fix is unconditional re-solve.
 
+**Deferred:** Adding `Solve(par)` unconditionally doubles the cost of every gradient evaluation in the GP optimiser. Without profiling to confirm this is a real (not hypothetical) bug in ROOT's BFGS2 caller ordering, the fix is too risky to apply silently. Needs profiling or a ROOT-source review before landing.
+
 **Cross-reference:** → 02_core_framework.md §GPRegressor hyper-parameter optimisation
 
 ---
@@ -99,6 +113,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** At line 71, `double* par = new double[n]` is allocated, filled, passed to `fitter.SetFCN`, and then the function returns without a `delete[] par`. The fitter copies the values internally, so the pointer is genuinely orphaned. For a typical workflow running hyper-parameter optimisation once this is a small fixed-size leak, but it is still a resource error.
 
 **Fix sketch:** Replace `new double[n]` with `std::vector<double> par(n)` and pass `par.data()` to `SetFCN`, which eliminates the manual allocation entirely.
+
+**Fixed:** commit `7e4fa66` — `double* par = new double[n]` replaced with `std::vector<double> par(n)`; `SetFCN` called with `par.data()`. Covered by `test/test_remaining_bugs.sh` (B-08).
 
 **Cross-reference:** → 02_core_framework.md §GPRegressor
 
@@ -112,6 +128,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Call `decV.Decompose()` (and `udv.Decompose()`) explicitly, check the `bool` return, and throw an exception or print a meaningful error and return a sentinel if decomposition fails.
 
+**Fixed:** commit `7e4fa66` — both `decV.Decompose()` and `udv.Decompose()` are now called explicitly; on failure a `std::cerr` message is printed and `TVectorD(n)` is returned. Covered by `test/test_remaining_bugs.sh` (B-09-decV, B-09-udv).
+
 **Cross-reference:** → 04_apps_pipeline.md §WienerSVD unfolding
 
 ---
@@ -123,6 +141,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The variable `temp_file` is overwritten at every iteration (line 86) with a new `TFile*`. The previous pointer is orphaned: no `Close()` or `delete` is called. ROOT's global file-management list keeps all files open until the process ends. For an analysis run with many input files this exhausts file descriptors and inflates ROOT's internal memory.
 
 **Fix sketch:** Add `if (temp_file) { temp_file->Close(); delete temp_file; }` before the `new TFile(...)` assignment, or use a RAII wrapper (`std::unique_ptr<TFile>` with a custom deleter).
+
+**Fixed:** commit `7e4fa66` — each histogram is detached via `SetDirectory(nullptr)` after `Get()`, then `temp_file->Close(); delete temp_file; temp_file = nullptr;` is called at the end of each per-file block. Covered by `test/test_remaining_bugs.sh` (B-10).
 
 **Cross-reference:** → 04_apps_pipeline.md §merge_hist
 
@@ -136,6 +156,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Add null-pointer guards (`if (ptr) ptr->clear();`) around each pointer dereference, or initialise all pointer members to `nullptr` in a constructor or `init_pointers` helper.
 
+**Fixed:** commit `7e4fa66` — all four `->clear()` calls in `clear_kine_info` wrapped with `if (ptr)` null guards. Covered by `test/test_remaining_bugs.sh` (B-11).
+
 **Cross-reference:** → 03_selection_layer.md §KineInfo branch setup
 
 ---
@@ -148,6 +170,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Set a `bool converged = false` flag, set it to `true` on normal exit, and check it after the loop to either throw a `std::runtime_error` or return `NaN`/sentinel so the caller can handle non-convergence explicitly.
 
+**Deferred:** Changing the return type/contract of the credible-interval method is an API change — all callers must learn to handle the new failure mode. Needs a coordinated update with author sign-off.
+
 **Cross-reference:** → 02_core_framework.md §Bayes credible interval
 
 ---
@@ -159,6 +183,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** `std::istream::eof()` is set only *after* a read that hits the end-of-file, not before it. The standard anti-pattern `while(!infile.eof())` therefore enters the loop one extra time after the last successful read; the failed `infile >> tmp_type >> run >> subrun` leaves the variables unchanged from the previous iteration, so that record is inserted again, potentially inflating the training/test set with a duplicate entry.
 
 **Fix sketch:** Replace `while(!infile.eof())` with `while(infile >> tmp_type >> run >> subrun)`, which checks the stream state after each read and exits cleanly at EOF.
+
+**Fixed:** commit `7e4fa66` — `while(!infile.eof())` replaced with `while(infile >> tmp_type >> run >> subrun)`. Covered by `test/test_remaining_bugs.sh` (B-13).
 
 **Cross-reference:** → 04_apps_pipeline.md §bdt_convert
 
@@ -174,6 +200,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Read the POT from the data input file (which already stores it in the `T` tree's `pot` branch, as seen in `merge_hist.cxx:88–90`) and propagate it through the covariance-matrix functions rather than using a literal.
 
+**Deferred:** `5e19` is the Run-1 open-data constant and is the expected normalisation for all existing covariance outputs. Replacing it with a dynamic value would silently shift normalisations for all users unless every downstream consumer is updated simultaneously. Requires author sign-off.
+
 **Cross-reference:** → 02_core_framework.md §CovMatrix POT normalisation
 
 ---
@@ -185,6 +213,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** The code partitions the full covariance matrix using `int num_Y = 26+26` (52 nueCC bins) and `137` (total bins including side-bands) at lines 283, 332, and 333. These are arithmetic on the channel layout documented nowhere nearby. Any change to the number of analysis bins (e.g. adding a new sideband channel) requires manual updates in at least three places.
 
 **Fix sketch:** Replace the literals with named constants or compute the values from the actual matrix dimension and the configuration in `Configure_Lee.h`. At minimum, `static_assert` or a runtime check should verify that the hardcoded sum matches the matrix dimensionality.
+
+**Deferred:** `26+26` and `137` are physics channel-layout constants. Changing them without a regression dataset to verify the covariance submatrix slices is unsafe. Needs the channel-layout owner to confirm the correct source of truth.
 
 **Cross-reference:** → 02_core_framework.md §TLee channel layout
 
@@ -198,6 +228,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Pass the bin-edge structure as a parameter to `Matrix_C` or derive it from the input matrix dimensions, and add an assertion that `dim_edges.back() == n`.
 
+**Deferred:** Same rationale as B-15 — `dim_edges` encodes the physics bin layout; changing it without a validated regression dataset is unsafe.
+
 **Cross-reference:** → 04_apps_pipeline.md §WienerSVD unfolding
 
 ---
@@ -209,6 +241,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** All three files contain an identical (or near-identical) multi-hundred-element `std::vector<int>` initialiser for `good_run_list_vec`. There is no shared constant or configuration file. A run added to one list but missed in another produces inconsistent event selections between analysis steps.
 
 **Fix sketch:** Extract the good-run list into a shared header or a plain-text configuration file read at runtime (a format already used elsewhere in the framework for other configuration), and have all three applications read from the single source.
+
+**Deferred:** Requires agreeing on a stable shared-config location and updating three application sources atomically. A 3-file structural refactor beyond the audit's bug scope; deferred pending author decision on the config convention.
 
 **Cross-reference:** → 04_apps_pipeline.md §good-run filtering
 
@@ -222,6 +256,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Convert the relevant flag fields to `int` or `bool`, or replace floating-point equality tests with a small-epsilon comparison or an explicit cast, e.g. `static_cast<int>(tagger_info.cosmict_flag) == 0`.
 
+**Deferred:** The `float == 0` pattern occurs across every cut predicate in `cuts.h` and `tagger.h`. A meaningful fix requires a full-file sweep rather than a single-line patch, and the risk of accidentally altering a cut boundary is non-trivial. Deferred pending a dedicated sweep with author review.
+
 **Cross-reference:** → 03_selection_layer.md §numuCC cut-based selection
 
 ---
@@ -233,6 +269,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** At line 192, `cov_xs_mat->Write(Form("cov_xf_mat_%d",run))` and `frac_cov_xs_mat->Write(Form("frac_cov_xf_mat_%d",run))` at line 193 use the key suffix `xf` (matching the flux-covariance naming convention) rather than `xs`. Variable and comment context surrounding the block make clear this file is the cross-section covariance output. If downstream analysis reads `"cov_xs_mat_%d"` it will silently fail to find the matrix.
 
 **Fix sketch:** Change the format string from `"cov_xf_mat_%d"` to `"cov_xs_mat_%d"` (and similarly for `frac_cov_xf_mat`) to match the cross-section context, and verify all downstream readers use the same key.
+
+**Deferred:** `frac_cov_xf_mat_N` is the de-facto convention read by ~12 consumers across `LEEana/wiener_svd/`, `plot_script/`, `unfolding_workshop/`, and `matrix_op/`. Renaming the key without updating all consumers simultaneously would silently break every downstream analysis. Needs a coordinated multi-repo update.
 
 **Cross-reference:** → 04_apps_pipeline.md §xs_cov_matrix
 
@@ -246,6 +284,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Change the key type of `map_re_entry_cv` and `map_re_entry_det` to `std::tuple<int,int,int>` keyed on `(run, subrun, event)` and update the fill and lookup sites accordingly.
 
+**Deferred:** Changing the match key alters which CV/det events pair up, which is a physics-correctness question that needs validation against a CV-vs-det sample. Cannot be verified without running the actual detector-variation workflow.
+
 **Cross-reference:** → 04_apps_pipeline.md §merge_det event matching
 
 ---
@@ -257,6 +297,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** At line 133, the comment reads `// 25% uncertainties ...` and sets `(*frac_cov_det_mat)(i,j) = 1./16.` for the `i==j` case. This is a placeholder that assigns a fixed 25% fractional uncertainty to any zero-prediction bin with a non-zero covariance entry, without physical motivation or traceability to the actual detector variation amplitude.
 
 **Fix sketch:** Replace the literal with either a configurable parameter or a physics-motivated estimate derived from the non-zero neighbouring bins. At minimum, document in a comment why 25% is appropriate for these bins and under which run conditions.
+
+**Deferred:** The 25% floor is a physics placeholder that may or may not be correct. Replacing it requires a systematics owner to confirm the appropriate treatment for zero-prediction bins. Not safe to change without that sign-off.
 
 **Cross-reference:** → 04_apps_pipeline.md §det_cov_matrix
 
@@ -272,6 +314,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Correct the typo in `Util.cxx` to `MatrixMatrix`.
 
+**Fixed:** commit `c130e78` — definition renamed from `MatrixMatirx` to `MatrixMatrix` in `src/Util.cxx`. No test needed (compiler would catch any remaining mismatch at link time).
+
 **Cross-reference:** → 02_core_framework.md §Util helpers
 
 ---
@@ -283,6 +327,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** `Exe_Fiedman_Cousins_Data` (line 44) transposes `el` → `ie`, and `Exe_Fledman_Cousins_Asimov` (line 98) drops the `a`. These are callable entry points whose names appear in external scripts or Makefile targets; any caller using the correct spelling "Feldman" will fail to link.
 
 **Fix sketch:** Rename both methods to `Exe_Feldman_Cousins_Data` and `Exe_Feldman_Cousins_Asimov` respectively, updating all call sites.
+
+**Fixed:** commit `1ce784b` — renamed at all six sites: header declaration (`TLee.h`), definitions (`TLee.cxx:44,98`), and two call sites in `read_TLee_v20.cxx`. External scripts outside this repo using the old spelling must be updated manually. Covered by `test/test_feldman_rename.sh`.
 
 **Cross-reference:** → 02_core_framework.md §TLee Feldman-Cousins
 
@@ -296,6 +342,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Either implement the function or mark it `[[deprecated]]` / remove it and its declaration, replacing any call sites with a direct call to the equivalent logic in `Set_Spectra_MatrixCov`.
 
+**Deferred:** It is unclear whether `Set_TransformMatrix` should be implemented, deprecated, or removed — only the author knows the intended use. Removing it risks breaking external callers; implementing it risks silently changing analysis behaviour. Needs author intent before any change.
+
 **Cross-reference:** → 02_core_framework.md §TLee matrix setup
 
 ---
@@ -308,6 +356,8 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 
 **Fix sketch:** Either remove the `test_wiener` branch entirely (if no longer needed) or expose it as a function parameter or preprocessor flag so it can be activated without source edits.
 
+**Deferred:** Same ambiguity as B-24 — only the author knows whether the branch should be removed or activated. Removing dead code without understanding why it was disabled is risky.
+
 **Cross-reference:** → 04_apps_pipeline.md §WienerSVD
 
 ---
@@ -319,5 +369,7 @@ This document catalogues confirmed code defects in the wcp-uboone-bdt analysis f
 **Explanation:** Multiple inclusion of `bdt.h` would produce redeclaration errors for the function prototypes inside `namespace LEEana`. The file is currently included in a controlled way, but the absence of a guard is a maintenance hazard.
 
 **Fix sketch:** Add `#pragma once` at the top of the file.
+
+**Fixed:** commit `c130e78` — `#pragma once` prepended to `inc/WCPLEEANA/bdt.h`. No test needed (compiler enforces idempotent inclusion).
 
 **Cross-reference:** → 03_selection_layer.md §BDT score evaluation

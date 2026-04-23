@@ -13,6 +13,7 @@
 #include "pfeval.h"
 
 #include <map>
+#include <unordered_map>
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -206,13 +207,13 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
         bool equal_binning = std::get<7>(rw_info_i);
         std::vector<double> reweight = std::get<8>(rw_info_i);
 
-        int wbin;
         bool flag_pass = get_rw_cut_pass(cut_str, eval, pfeval, tagger, kine);
         if (flag_pass){
           if (var>max_var && overflow) addtl_weight = reweight.back();
           else if(var>max_var) addtl_weight = 1;
           else if (var<min_var && underflow) addtl_weight = reweight[0];
           else if (var>min_var){
+            int wbin = -1;  // B-03 fix: initialise; -1 = no bin matched
             if(equal_binning){
               double bin_len = (max_var-min_var)/reweight.size();
               if(underflow && overflow) bin_len = (max_var-min_var)/(reweight.size()-2);
@@ -220,7 +221,7 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
               wbin = floor((var-min_var)/bin_len);
             }else{
               std::vector<double> bins = std::get<9>(rw_info_i);
-              for(int b=0; b<bins.size()-1; b++){
+              for(int b=0; b<(int)bins.size()-1; b++){
                 if(var<=bins[b+1] && var>bins[b]){
                   wbin = b;
                   break;
@@ -228,42 +229,51 @@ double LEEana::get_weight(TString weight_name, EvalInfo& eval, PFevalInfo& pfeva
               }
             }
             if(underflow) wbin++;
-            addtl_weight *= reweight[wbin];
+            if(wbin >= 0 && wbin < (int)reweight.size())
+              addtl_weight *= reweight[wbin];
           }
         }
       }
     }
   }
   
-  if (weight_name == "cv_spline"){
-    return addtl_weight*eval.weight_cv * eval.weight_spline;
-  }else if (weight_name == "cv_spline_cv_spline"){
-    return pow(addtl_weight*eval.weight_cv * eval.weight_spline,2);
-  }else if (weight_name == "unity" || weight_name == "unity_unity"){
+  static const std::unordered_map<std::string,int> wmap = {
+    {"cv_spline",                    1},
+    {"cv_spline_cv_spline",          2},
+    {"unity",                        3},
+    {"unity_unity",                  3},
+    {"lee_cv_spline",                4},
+    {"lee_cv_spline_lee_cv_spline",  5},
+    {"lee_cv_spline_cv_spline",      6},
+    {"cv_spline_lee_cv_spline",      6},
+    {"spline",                       7},
+    {"spline_spline",                8},
+    {"lee_spline",                   9},
+    {"lee_spline_lee_spline",       10},
+    {"lee_spline_spline",           11},
+    {"spline_lee_spline",           11},
+    {"add_weight",                  12},
+  };
+  auto wit = wmap.find(weight_name.Data());
+  if (wit == wmap.end()) {
+    std::cout << "Unknown weights: " << weight_name << std::endl;
     return 1;
-  }else if (weight_name == "lee_cv_spline"){
-    return (eval.weight_lee * addtl_weight*eval.weight_cv * eval.weight_spline);
-  }else if (weight_name == "lee_cv_spline_lee_cv_spline"){
-    return pow(eval.weight_lee * addtl_weight*eval.weight_cv * eval.weight_spline,2);
-  }else if (weight_name == "lee_cv_spline_cv_spline" || weight_name == "cv_spline_lee_cv_spline"){
-    return eval.weight_lee * pow(addtl_weight*eval.weight_cv * eval.weight_spline,2);
-  }else if (weight_name == "spline"){
-    return eval.weight_spline;
-  }else if (weight_name == "spline_spline"){
-    return pow(eval.weight_spline,2);
-  }else if (weight_name == "lee_spline"){
-    return (eval.weight_lee * eval.weight_spline);
-  }else if (weight_name == "lee_spline_lee_spline"){
-    return pow(eval.weight_lee * eval.weight_spline,2);
-  }else if (weight_name == "lee_spline_spline" || weight_name == "spline_lee_spline"){
-    return eval.weight_lee * pow( eval.weight_spline,2);
-  }else if (weight_name == "add_weight"){//for systematics
-    return addtl_weight;
-  }else{
-    std::cout <<"Unknown weights: " << weight_name << std::endl;
   }
-	    
-  
+  const double cv = addtl_weight * eval.weight_cv * eval.weight_spline;
+  switch (wit->second) {
+    case  1: return cv;
+    case  2: return pow(cv,2);
+    case  3: return 1;
+    case  4: return eval.weight_lee * cv;
+    case  5: return pow(eval.weight_lee * cv,2);
+    case  6: return eval.weight_lee * pow(cv,2);
+    case  7: return eval.weight_spline;
+    case  8: return pow(eval.weight_spline,2);
+    case  9: return eval.weight_lee * eval.weight_spline;
+    case 10: return pow(eval.weight_lee * eval.weight_spline,2);
+    case 11: return eval.weight_lee * pow(eval.weight_spline,2);
+    case 12: return addtl_weight;
+  }
   return 1;
 }
 
@@ -1649,7 +1659,8 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
   if (eval.truth_vtxX > -1 && eval.truth_vtxX <= 254.3 &&  eval.truth_vtxY >-115.0 && eval.truth_vtxY<=117.0 && eval.truth_vtxZ > 0.6 && eval.truth_vtxZ <=1036.4) flag_truth_inside = true;
 
   // definition of additional cuts
-  std::map<std::string, bool> map_cuts_flag;
+  std::unordered_map<std::string, bool> map_cuts_flag;
+  map_cuts_flag.reserve(64);
   if(is_far_sideband(kine, tagger, flag_data)) map_cuts_flag["farsideband"] = true; 
   else map_cuts_flag["farsideband"] = false; 
   

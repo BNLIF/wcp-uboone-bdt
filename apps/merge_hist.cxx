@@ -104,12 +104,13 @@ int main( int argc, char** argv )
     
     for (size_t i=0;i!=all_histo_infos.size();i++){
       htemp = (TH1F*)temp_file->Get(std::get<0>(all_histo_infos.at(i)));
-      
+      if (htemp) htemp->SetDirectory(nullptr); // detach so Close() below doesn't invalidate it
       //std::cout << out_filename << " " << std::get<0>(all_histo_infos.at(i)) << " " << htemp << std::endl;
       //if (htemp == 0) continue;
       //      temp_histograms.push_back(htemp);
       map_name_histogram[std::get<0>(all_histo_infos.at(i))] = std::make_pair(htemp, pot);
     }
+    temp_file->Close(); delete temp_file; temp_file = nullptr;
   }
 
   

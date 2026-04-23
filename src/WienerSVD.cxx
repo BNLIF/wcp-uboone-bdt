@@ -123,6 +123,10 @@ TVectorD WienerSVD(TMatrixD Response, TVectorD Signal, TVectorD Measure, TMatrix
     // Decomposition of Covariance Matrix to get orthogonal Q to rotate the current frame, 
     // then make the uncertainty for each bin equal to 1
     TDecompSVD decV(Covariance);
+    if (!decV.Decompose()) {
+        std::cerr << "WienerSVD: covariance matrix SVD decomposition failed" << std::endl;
+        return TVectorD(n);
+    }
     TMatrixD Q0 (TMatrixD::kTransposed, decV.GetV());
     TVectorD err0 = decV.GetSig();
 
@@ -167,6 +171,10 @@ TVectorD WienerSVD(TMatrixD Response, TVectorD Signal, TVectorD Measure, TMatrix
   
     // SVD decomposition of R 
     TDecompSVD udv(R);
+    if (!udv.Decompose()) {
+        std::cerr << "WienerSVD: response matrix SVD decomposition failed" << std::endl;
+        return TVectorD(n);
+    }
     TMatrixD U = udv.GetU();
     TMatrixD U_t (TMatrixD::kTransposed, U);
     TMatrixD V = udv.GetV();

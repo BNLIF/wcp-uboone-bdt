@@ -1,92 +1,45 @@
+#pragma once
+
 namespace config_Lee
 {
   ////////// input files for spectra and covariance matrixes
 
-  /* TString spectra_file = "./data_framework_Doc33131/merge_all.root"; */
-  /* TString flux_Xs_directory = "./data_framework_Doc33131/flux_Xs/"; */
-  /* TString detector_directory = "./data_framework_Doc33131/det_both/"; */
-  /* TString mc_directory = "./data_framework_Doc33131/mc_stat/"; */
+  /// paper used
+  // TString spectra_file = "./TLee_input_normal_7chs_Jun29_nearside/merge.root";
+  // TString flux_Xs_directory = "./TLee_input_normal_7chs_Jun29_nearside/flux_Xs/";
+  // TString detector_directory = "./TLee_input_normal_7chs_Jun29_nearside/det/";
+  // TString mc_directory = "./TLee_input_normal_7chs_Jun29_nearside/mc_stat/";
 
-  //TString detector_directory = "/home/xji/data0/work/505_TLee/TLee_for_data_5e19/data_framework/det_11stat/";
-  //TString detector_directory = "/home/xji/data0/work/505_TLee/TLee_for_data_5e19/data_framework/det_norandom/";  
-  
-  /* TString spectra_file = "./new_new_TLee_input_fakeset5_myself/merge.root"; */
-  /* TString flux_Xs_directory = "./new_new_TLee_input_fakeset5_myself/flux_Xs/"; */
-  /* TString detector_directory = "./new_new_TLee_input_fakeset5_myself/det/"; */
-  /* TString mc_directory = "./new_new_TLee_input_fakeset5_myself/mc_stat/"; */
-
-  /* TString spectra_file = "./new_new_TLee_input_fakeset5_1mu0p1muNp/merge.root"; */
-  /* TString flux_Xs_directory = "./new_new_TLee_input_fakeset5_1mu0p1muNp/flux_Xs/"; */
-  /* TString detector_directory = "./new_new_TLee_input_fakeset5_1mu0p1muNp/det/"; */
-  /* TString mc_directory = "./new_new_TLee_input_fakeset5_1mu0p1muNp/mc_stat/"; */
-
-  /* TString spectra_file = "./new_new_TLee_input_fakeset7/merge.root"; */
-  /* TString flux_Xs_directory = "./new_new_TLee_input_fakeset7/flux_Xs/"; */
-  /* TString detector_directory = "./new_new_TLee_input_fakeset7/det/"; */
-  /* TString mc_directory = "./new_new_TLee_input_fakeset7/mc_stat/"; */
-
-  /* TString spectra_file = "./new_new_TLee_input_normal_highstatDetVar/merge.root"; */
-  /* TString flux_Xs_directory = "./new_new_TLee_input_normal_highstatDetVar/flux_Xs/"; */
-  /* TString detector_directory = "./new_new_TLee_input_normal_highstatDetVar/det/"; */
-  /* TString mc_directory = "./new_new_TLee_input_normal_highstatDetVar/mc_stat/"; */
-          
-  /* TString spectra_file = "./TLee_input_NumiReinteractionIssue_cutbased/merge.root"; */
-  /* TString flux_Xs_directory = "./TLee_input_NumiReinteractionIssue_cutbased/flux_Xs/"; */
-  /* TString detector_directory = "./TLee_input_NumiReinteractionIssue_cutbased/det/"; */
-  /* TString mc_directory = "./TLee_input_NumiReinteractionIssue_cutbased/mc_stat/"; */
-  
-  /* TString spectra_file = "./numi_result_syst_0_0/merge.root"; */
-  /* TString flux_Xs_directory = "./numi_result_syst_0_0/XsFlux/"; */
-  /* TString detector_directory = "./TLee_input_Mar25_final_16chs_standard/det/"; */
-  /* TString mc_directory = "./numi_result_syst_0_0/mc_stat/"; */  
-  
-  /* TString spectra_file = "./TLee_input_eLEEnote1/merge.root"; */
-  /* TString flux_Xs_directory = "./TLee_input_eLEEnote1/flux_Xs/"; */
-  /* TString detector_directory = "./TLee_input_eLEEnote1/det/"; */
-  /* TString mc_directory = "./TLee_input_eLEEnote1/mc_stat/"; */
-  
-  /*
-  TString spectra_file = "./numi_summary_noosc/merge.root";
-  TString flux_Xs_directory = "./numi_summary_noosc/XsFlux/";
-  TString detector_directory = "./numi_summary_noosc/det/";
-  TString mc_directory = "./numi_summary_noosc/mcstat/";
-  */
-  /*
-  TString spectra_file = "./numi_summary_osc/merge.root";
-  TString flux_Xs_directory = "./numi_summary_osc/XsFlux/";
-  TString detector_directory = "./numi_summary_osc/det/";
-  TString mc_directory = "./numi_summary_osc/mcstat/";
-  */
-
-
-  
   TString spectra_file = "./new_TLee_input_opendata5e19/merge.root";
   TString flux_Xs_directory = "./new_TLee_input_opendata5e19/flux_Xs/";
   TString detector_directory = "./new_TLee_input_opendata5e19/det/";
   TString mc_directory = "./new_TLee_input_opendata5e19/mc_stat/";
 
+  ///
+  int array_LEE_ch[4] = {8,9,0,0};// element value "0" will note be set to the LEE_ch
+  //int array_LEE_ch[4] = {12,13,14,15};// element value "0" will note be set to the LEE_ch
+  //int array_LEE_ch[6] = {1,2,3,4,5,6};// element value "0" will note be set to the LEE_ch
+  //int array_LEE_ch[8] = {2,3,5,6,7,8,0,0};// element value "0" will note be set to the LEE_ch
 
-  
   int channels_observation = 7;// data channels (=hdata_obsch_# in spectra_file above)
                                // which is equal to the channels after collapse
-
+                               // NOTE: This value is not used in the lastest version
+  
   int syst_cov_flux_Xs_begin = 1;// files in flux_Xs_directory above
-  int syst_cov_flux_Xs_end   = 19;//cov_18.root is uncorrelated reweighting and cov_19.root is correlated
+  int syst_cov_flux_Xs_end   = 17;
  
   int syst_cov_mc_stat_begin = 0;// files in mc_directory above
-  int syst_cov_mc_stat_end   = 99;
+  int syst_cov_mc_stat_end   = 98;
    
-
   /// some places may need to be changed when use different file-formats
   /// void TLee::Set_Spectra_MatrixCov()
   /// (*) map_input_spectrum_ch_str      -----> prediction channels before collapse
   /// (*) map_Lee_ch                     -----> tag LEE channels
   /// (*) map_detectorfile_str           -----> detector files
- 
-  
+   
   ////////// display graphics flag
 
-  bool flag_display_graphics = 1;
+  bool flag_display_graphics = 0;
   
   ////////// systematics flag
   
@@ -94,9 +47,6 @@ namespace config_Lee
   bool flag_syst_detector   = 1;
   bool flag_syst_additional = 1;
   bool flag_syst_mc_stat    = 1;
-  bool flag_syst_reweight        = 0;
-  bool flag_syst_reweight_cor    = 0;
-
 
   double Lee_strength_for_outputfile_covariance_matrix = 0;
   
@@ -106,7 +56,7 @@ namespace config_Lee
   
   double Lee_strength_for_GoF         = 0;
 
-  bool flag_GoF_output2file_default_0 = 1;
+  bool flag_GoF_output2file_default_0 = 0;
 
   bool flag_lookelsewhere             = 0;
   
@@ -122,16 +72,7 @@ namespace config_Lee
   ////////// Lee strength fitting -- data
 
   bool flag_Lee_strength_data = 0;
+  bool flag_Lee_scan_data     = 0;
 
-  ////////// MicroBooNE suggested
-
-  bool flag_chi2_data_H0 = 0;
-  bool flag_dchi2_H0toH1 = 0;
-  
-  ////////// Advanced tools
-  
-  ///// void TLee::Minimization_Lee_strength_FullCov(double Lee_initial_value, bool flag_fixed)
-  ///// do the fitting on the spectra and cov_total after constraint ?
-  bool flag_Lee_minimization_after_constraint = 0;// hardcoded, only for the standard 7-ch fitting
-  
+  bool flag_GOF = 0;
 }

@@ -26,7 +26,7 @@ TMatrixD Matrix(Int_t row, Int_t column)
     return MMM;
 }
 
-void MatrixMatirx(TMatrixD M1, TMatrixD M2)
+void MatrixMatrix(TMatrixD M1, TMatrixD M2)
 {
     cout<<"Matrix 1 ========="<<endl;
     M1.Print();
