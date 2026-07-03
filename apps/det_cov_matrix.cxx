@@ -126,7 +126,15 @@ int main( int argc, char** argv )
     }
   }
   std::cout << outfile_name << std::endl;
-
+// <<< DEBUG BLOCK START >>>
+std::cout << "=== DEBUG: Histogram contents ===" << std::endl;
+for (auto it = map_histoname_hist.begin(); it != map_histoname_hist.end(); it++){
+    std::cout << it->first << " -> Nbins: " 
+              << it->second->GetNbinsX() 
+              << ", Entries: " << it->second->GetEntries() 
+              << ", Integral: " << it->second->Integral() << std::endl;
+}
+// <<< DEBUG BLOCK END >>>
   TMatrixD* cov_add_mat = cov.get_add_cov_matrix();
   // create a covariance matrix for bootstrapping ...
   TMatrixD* cov_mat_bootstrapping = new TMatrixD(cov_add_mat->GetNrows(), cov_add_mat->GetNcols());

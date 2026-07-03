@@ -1954,263 +1954,66 @@ int TLee::Exe_Goodness_of_fit(int num_Y, int num_X, TMatrixD matrix_pred, TMatri
 
 void TLee::Plotting_systematics()
 {
-  cout<<" ---> Plotting_systematics"<<endl<<endl;
+    cout << " ---> Plotting_systematics_print" << endl << endl;
 
-  int color_flux       = kRed;
-  int color_Xs         = kBlue;
-  int color_detector   = kMagenta;
-  int color_additional = kOrange-3;
-  int color_mc_stat    = kGreen+1;
-  int color_reweight   = kYellow+1;
-  int color_reweight_cor   = kYellow-9;
-  int color_total      = kBlack;
-  
-    
-  int rows = bins_newworld;
-  int num_ch = map_data_spectrum_ch_bin.size();
-  
-  if( color_flux+color_Xs+color_detector+color_additional+color_mc_stat+color_total+rows+num_ch==0 ) cout<<" test "<<endl;
-  
-  ///////////////////////////////////////////
+    int rows = bins_newworld;
 
-  map<int, double>line_xy;
-  map<int, TLine*>line_root_xx;
-  map<int, TLine*>line_root_yy;
-  
-  for(int ich=1; ich<num_ch; ich++) {
-    for(int jch=1; jch<=ich; jch++) {
-      line_xy[ich] += (int)(map_data_spectrum_ch_bin[jch].size());
+    // Colors for plotting
+    int color_flux     = kRed;
+    int color_Xs       = kBlue;
+    int color_detector = kMagenta;
+    int color_mc_stat  = kGreen+1;
+    int color_total    = kBlack;
+
+    // Histograms
+    TH1D *h1_total_relerr    = new TH1D("h1_total_relerr", "", rows, 0, rows);
+    TH1D *h1_flux_relerr     = new TH1D("h1_flux_relerr", "", rows, 0, rows);
+    TH1D *h1_Xs_relerr       = new TH1D("h1_Xs_relerr", "", rows, 0, rows);
+    TH1D *h1_detector_relerr = new TH1D("h1_detector_relerr", "", rows, 0, rows);
+    TH1D *h1_mc_stat_relerr  = new TH1D("h1_mc_stat_relerr", "", rows, 0, rows);
+
+    TH1D *h1_pred_totalsyst = new TH1D("h1_pred_totalsyst", "", rows, 0, rows);
+
+    // Fill histograms from your matrices
+    for(int ibin=0; ibin<rows; ibin++) {
+        double val_cv = matrix_pred_newworld(0, ibin);
+        double cov_total      = matrix_absolute_cov_newworld(ibin, ibin);
+        double cov_flux       = matrix_absolute_flux_cov_newworld(ibin, ibin);
+        double cov_Xs         = matrix_absolute_Xs_cov_newworld(ibin, ibin);
+        double cov_detector   = matrix_absolute_detector_cov_newworld(ibin, ibin);
+        double cov_mc_stat    = matrix_absolute_mc_stat_cov_newworld(ibin, ibin);
+
+        h1_pred_totalsyst->SetBinContent(ibin+1, val_cv);
+        h1_total_relerr->SetBinContent(ibin+1, sqrt(cov_total)/val_cv);
+        h1_flux_relerr->SetBinContent(ibin+1, sqrt(cov_flux)/val_cv);
+        h1_Xs_relerr->SetBinContent(ibin+1, sqrt(cov_Xs)/val_cv);
+        h1_detector_relerr->SetBinContent(ibin+1, sqrt(cov_detector)/val_cv);
+        h1_mc_stat_relerr->SetBinContent(ibin+1, sqrt(cov_mc_stat)/val_cv);
+
+        // Print the bin contents
+        printf("%3d  %12.6f  %12.6f  %12.6f  %12.6f  %12.6f  %12.6f\n",
+               ibin,
+               val_cv,
+               sqrt(cov_total)/val_cv,
+               sqrt(cov_flux)/val_cv,
+               sqrt(cov_Xs)/val_cv,
+               sqrt(cov_detector)/val_cv,
+               sqrt(cov_mc_stat)/val_cv);
     }
-    //cout<<Form(" ---> line xy %2d: %4.0f", ich, line_xy[ich])<<endl;    
-    line_root_xx[ich] = new TLine( line_xy[ich], 0, line_xy[ich], rows );
-    line_root_xx[ich]->SetLineWidth(1); line_root_xx[ich]->SetLineColor(kBlack); line_root_xx[ich]->SetLineStyle(7);
-    line_root_yy[ich] = new TLine( 0, line_xy[ich], rows, line_xy[ich]);
-    line_root_yy[ich]->SetLineWidth(1); line_root_yy[ich]->SetLineColor(kBlack); line_root_yy[ich]->SetLineStyle(7);
-  }
 
-  ///////////////////////////////////////////
-  TH2D *h2_covariance_total = new TH2D("h2_covariance_total", "", rows, 0, rows, rows, 0, rows);
-  TH2D *h2_correlation_total = new TH2D("h2_correlation_total", "", rows, 0, rows, rows, 0, rows);
-  
-  TH1D *h1_total_relerr = new TH1D("h1_total_relerr", "", rows, 0, rows);
-  TH1D *h1_flux_relerr = new TH1D("h1_flux_relerr", "", rows, 0, rows);
-  TH1D *h1_Xs_relerr = new TH1D("h1_Xs_relerr", "", rows, 0, rows);
-  TH1D *h1_detector_relerr = new TH1D("h1_detector_relerr", "", rows, 0, rows);
-  TH1D *h1_mc_stat_relerr = new TH1D("h1_mc_stat_relerr", "", rows, 0, rows);
-  TH1D *h1_additional_relerr = new TH1D("h1_additional_relerr", "", rows, 0, rows);
-  TH1D *h1_reweight_relerr = new TH1D("h1_reweight_relerr", "", rows, 0, rows);
-  TH1D *h1_reweight_cor_relerr = new TH1D("h1_reweight_cor_relerr", "", rows, 0, rows);
+    // -------------------
+    // Make the same plots as before
+    TCanvas *c1 = new TCanvas("c1","Total relative errors",1200,700);
+    h1_total_relerr->SetLineColor(color_total); h1_total_relerr->SetLineWidth(3); h1_total_relerr->Draw("hist");
+    h1_flux_relerr->SetLineColor(color_flux); h1_flux_relerr->Draw("same hist");
+    h1_Xs_relerr->SetLineColor(color_Xs); h1_Xs_relerr->Draw("same hist");
+    h1_detector_relerr->SetLineColor(color_detector); h1_detector_relerr->Draw("same hist");
+    h1_mc_stat_relerr->SetLineColor(color_mc_stat); h1_mc_stat_relerr->Draw("same hist");
+    c1->SaveAs("relerr_total_flux_Xs_det_mcstat.png");
 
-  TH1D *h1_flux_fraction = new TH1D("h1_flux_fraction", "", rows, 0, rows);
-  TH1D *h1_Xs_fraction = new TH1D("h1_Xs_fraction", "", rows, 0, rows);
-  TH1D *h1_detector_fraction = new TH1D("h1_detector_fraction", "", rows, 0, rows);
-  TH1D *h1_mc_stat_fraction = new TH1D("h1_mc_stat_fraction", "", rows, 0, rows);
-  TH1D *h1_additional_fraction = new TH1D("h1_additional_fraction", "", rows, 0, rows);
-  TH1D *h1_reweight_fraction = new TH1D("h1_reweight_fraction", "", rows, 0, rows);
-  TH1D *h1_reweight_cor_fraction = new TH1D("h1_reweight_cor_fraction", "", rows, 0, rows);
-  
-  TH1D *h1_pred_totalsyst = new TH1D("h1_pred_totalsyst", "", rows, 0, rows);
-  TH1D *h1_meas = new TH1D("h1_meas", "", rows, 0, rows);
-  
-  for(int ibin=1; ibin<=rows; ibin++) {
-    for(int jbin=1; jbin<=rows; jbin++) {
-      double cov_ij = matrix_absolute_cov_newworld(ibin-1,jbin-1);      
-      double cov_i  = matrix_absolute_cov_newworld(ibin-1,ibin-1);
-      double cov_j  = matrix_absolute_cov_newworld(jbin-1,jbin-1);      
-      
-      double val_correlation = cov_ij/sqrt(cov_i*cov_j);
-      if( cov_i==0 || cov_j==0 ) val_correlation = 0;
-   
-      h2_covariance_total->SetBinContent(ibin, jbin, cov_ij);
-      h2_correlation_total->SetBinContent(ibin, jbin, val_correlation);
-
-      if( ibin==jbin ) {
-        double val_cv = matrix_pred_newworld(0, ibin-1);
-
-        double cov_total      = matrix_absolute_cov_newworld(ibin-1, ibin-1);
-        double cov_flux       = matrix_absolute_flux_cov_newworld(ibin-1, ibin-1);
-        double cov_Xs         = matrix_absolute_Xs_cov_newworld(ibin-1, ibin-1);
-        double cov_detector   = matrix_absolute_detector_cov_newworld(ibin-1, ibin-1);
-        double cov_mc_stat    = matrix_absolute_mc_stat_cov_newworld(ibin-1, ibin-1);
-        double cov_additional = matrix_absolute_additional_cov_newworld(ibin-1, ibin-1);
-        double cov_reweight   = matrix_absolute_reweight_cov_newworld(ibin-1, ibin-1);
-        double cov_reweight_cor   = matrix_absolute_reweight_cor_cov_newworld(ibin-1, ibin-1);
-
-        // if( val_cv==0 || val_cv<1e-3) {
-        //   cout<<" CV==0 at bin "<<ibin<<" "<<val_cv<<endl;
-        // }
-        
-        if(val_cv!=0) {
-          h1_total_relerr->SetBinContent( ibin, sqrt( cov_total )/val_cv );
-          h1_flux_relerr->SetBinContent( ibin, sqrt( cov_flux )/val_cv );
-          h1_Xs_relerr->SetBinContent( ibin, sqrt(cov_Xs  )/val_cv );
-          h1_detector_relerr->SetBinContent( ibin, sqrt( cov_detector )/val_cv );
-          h1_mc_stat_relerr->SetBinContent( ibin, sqrt( cov_mc_stat )/val_cv );
-          h1_additional_relerr->SetBinContent( ibin, sqrt( cov_additional )/val_cv );
-          h1_reweight_relerr->SetBinContent( ibin, sqrt( cov_reweight )/val_cv );
-          h1_reweight_cor_relerr->SetBinContent( ibin, sqrt( cov_reweight_cor )/val_cv );
-        }
-
-        if( cov_total!=0 ) {
-          h1_flux_fraction->SetBinContent(ibin, cov_flux*100./cov_total );
-          h1_Xs_fraction->SetBinContent(ibin, cov_Xs*100./cov_total );    
-          h1_detector_fraction->SetBinContent(ibin, cov_detector*100./cov_total );
-          h1_mc_stat_fraction->SetBinContent(ibin, cov_mc_stat*100./cov_total );
-          h1_additional_fraction->SetBinContent(ibin, cov_additional*100./cov_total );
-          h1_reweight_fraction->SetBinContent(ibin, cov_reweight*100./cov_total );
-          h1_reweight_cor_fraction->SetBinContent(ibin, cov_reweight_cor*100./cov_total );
-        }
-        
-        h1_pred_totalsyst->SetBinContent( ibin, val_cv ); h1_pred_totalsyst->SetBinError( ibin, sqrt(cov_total) );
-        h1_meas->SetBinContent( ibin, matrix_data_newworld(0, ibin-1) );          
-        
-      }// ibin==jbin      
-    }// jbin
-  }// ibin
-
-  ///////////////////////
-  
-  TCanvas *canv_h2_correlation_total = new TCanvas("canv_h2_correlation_total", "canv_h2_correlation_total", 800, 700);
-  func_canv_margin(canv_h2_correlation_total, 0.15, 0.15, 0.1, 0.15);
-  h2_correlation_total->Draw("colz");
-  func_title_size(h2_correlation_total, 0.05, 0.05, 0.05, 0.05);
-  h2_correlation_total->GetZaxis()->SetLabelSize(0.05);
-  h2_correlation_total->GetZaxis()->SetRangeUser(-1, 1);
-  func_xy_title(h2_correlation_total, "Bin index", "Bin index");
-  h2_correlation_total->GetXaxis()->CenterTitle(); h2_correlation_total->GetYaxis()->CenterTitle();
-  h2_correlation_total->GetXaxis()->SetTitleOffset(1.2); h2_correlation_total->GetYaxis()->SetTitleOffset(1.2);
-  
-  for(int idx=1; idx<num_ch; idx++) {
-    line_root_xx[idx]->Draw("same");
-    line_root_yy[idx]->Draw("same");
-  }
-  
-  canv_h2_correlation_total->SaveAs("canv_h2_correlation_total.png");
-  
-  ///////////////////////
-
-  TH2D *h2_relerr_total = new TH2D("h2_relerr_total", "", rows, 0, rows, 100, 0, 2.5);
-
-  TCanvas *canv_h2_relerr_total = new TCanvas("canv_h2_relerr_total", "canv_h2_relerr_total", 1300, 700);
-  func_canv_margin(canv_h2_relerr_total, 0.15, 0.2, 0.11, 0.15);
-  h2_relerr_total->Draw();
-  func_title_size(h2_relerr_total, 0.05, 0.05, 0.05, 0.05);
-  func_xy_title(h2_relerr_total, "Bin index", "Relative error");
-  h2_relerr_total->GetXaxis()->CenterTitle(); h2_relerr_total->GetYaxis()->CenterTitle();
-  h2_relerr_total->GetXaxis()->SetTitleOffset(1.2); h2_relerr_total->GetYaxis()->SetTitleOffset(1.);
-   
-  h1_total_relerr->Draw("same hist"); h1_total_relerr->SetLineColor(color_total); h1_total_relerr->SetLineWidth(4);  
-  h1_additional_relerr->Draw("same hist"); h1_additional_relerr->SetLineColor(color_additional);  
-  h1_mc_stat_relerr->Draw("same hist"); h1_mc_stat_relerr->SetLineColor(color_mc_stat);  
-  h1_flux_relerr->Draw("same hist"); h1_flux_relerr->SetLineColor(color_flux);  
-  h1_Xs_relerr->Draw("same hist"); h1_Xs_relerr->SetLineColor(color_Xs); 
-  if(flag_syst_reweight) h1_reweight_relerr->Draw("same hist"); h1_reweight_relerr->SetLineColor(color_reweight);
-  if(flag_syst_reweight_cor) h1_reweight_cor_relerr->Draw("same hist"); h1_reweight_cor_relerr->SetLineColor(color_reweight_cor); 
-  h1_detector_relerr->Draw("same hist"); h1_detector_relerr->SetLineColor(color_detector);
-
-  for(int idx=1; idx<num_ch; idx++) {
-    line_root_xx[idx]->Draw(); line_root_xx[idx]->SetLineStyle(7); line_root_xx[idx]->SetY2(2.5);
-  }
-
-  TLegend *lg_relerr_total = new TLegend(0.81, 0.5, 0.98, 0.89);
-  lg_relerr_total->AddEntry(h1_total_relerr, "Total", "l");
-  lg_relerr_total->AddEntry(h1_flux_relerr, "Flux", "l");
-  lg_relerr_total->AddEntry(h1_Xs_relerr, "Xs", "l");
-  if(flag_syst_reweight) lg_relerr_total->AddEntry(h1_reweight_relerr, "Reweight", "l");
-  if(flag_syst_reweight_cor) lg_relerr_total->AddEntry(h1_reweight_cor_relerr, "Reweight cor", "l");  
-  lg_relerr_total->AddEntry(h1_detector_relerr, "Detector", "l");
-  lg_relerr_total->AddEntry(h1_mc_stat_relerr, "MC stat", "l");
-  lg_relerr_total->AddEntry(h1_additional_relerr, "Dirt", "l");
-  lg_relerr_total->Draw();
-  lg_relerr_total->SetTextSize(0.04);
-    
-  h2_relerr_total->Draw("same axis");
-  canv_h2_relerr_total->SaveAs("canv_h2_relerr_total.png");
-
-  /////////////////////////
-  
-  THStack *h1_stack_fraction = new THStack("h1_stack_fraction", "");
-  h1_stack_fraction->Add(h1_flux_fraction);
-  h1_flux_fraction->SetFillColor(color_flux); h1_flux_fraction->SetLineColor(kBlack);
-  h1_stack_fraction->Add(h1_Xs_fraction);
-  h1_Xs_fraction->SetFillColor(color_Xs); h1_Xs_fraction->SetLineColor(kBlack);
-  if(flag_syst_reweight){
-    h1_stack_fraction->Add(h1_reweight_fraction);
-    h1_reweight_fraction->SetFillColor(color_reweight); h1_reweight_fraction->SetLineColor(kBlack);
-  }
-  if(flag_syst_reweight_cor){
-    h1_stack_fraction->Add(h1_reweight_cor_fraction);
-    h1_reweight_cor_fraction->SetFillColor(color_reweight_cor); h1_reweight_cor_fraction->SetLineColor(kBlack);
-  }
-  h1_stack_fraction->Add(h1_detector_fraction);
-  h1_detector_fraction->SetFillColor(color_detector); h1_detector_fraction->SetLineColor(kBlack);
-  h1_stack_fraction->Add(h1_mc_stat_fraction);
-  h1_mc_stat_fraction->SetFillColor(color_mc_stat); h1_mc_stat_fraction->SetLineColor(kBlack);
-  h1_stack_fraction->Add(h1_additional_fraction);
-  h1_additional_fraction->SetFillColor(color_additional); h1_additional_fraction->SetLineColor(kBlack);
-    
-  TH2D *h2_basic_fraction = new TH2D("h2_basic_fraction", "", rows, 0, rows, 110, 0, 110);
-
-  TCanvas *canv_h2_basic_fraction = new TCanvas("canv_h2_basic_fraction", "canv_h2_basic_fraction", 1300, 700);
-  func_canv_margin(canv_h2_basic_fraction, 0.15, 0.2, 0.11, 0.15);
-  h2_basic_fraction->Draw();
-  func_title_size(h2_basic_fraction, 0.05, 0.05, 0.05, 0.05);
-  func_xy_title(h2_basic_fraction, "Bin index", "Syst. percentage");
-  h2_basic_fraction->GetXaxis()->CenterTitle(); h2_basic_fraction->GetYaxis()->CenterTitle();
-  h2_basic_fraction->GetXaxis()->SetTitleOffset(1.2); h2_basic_fraction->GetYaxis()->SetTitleOffset(1.05);
-  
-  h1_stack_fraction->Draw("same");
-  
-  for(int idx=1; idx<num_ch; idx++) {
-    line_root_xx[idx]->Draw(); line_root_xx[idx]->SetLineStyle(7); line_root_xx[idx]->SetY2(110);
-  }
-
-  TLegend *lg_fraction_total = new TLegend(0.81, 0.55, 0.98, 0.89);
-  lg_fraction_total->AddEntry(h1_flux_fraction, "Flux", "f");
-  lg_fraction_total->AddEntry(h1_Xs_fraction, "Xs", "f");  
-  if(flag_syst_reweight) lg_fraction_total->AddEntry(h1_reweight_fraction, "Reweight", "f");
-  if(flag_syst_reweight_cor) lg_fraction_total->AddEntry(h1_reweight_cor_fraction, "Reweight cor", "f");
-  lg_fraction_total->AddEntry(h1_detector_fraction, "Detector", "f");
-  lg_fraction_total->AddEntry(h1_mc_stat_fraction, "MC stat", "f");
-  lg_fraction_total->AddEntry(h1_additional_fraction, "Dirt", "f");
-  lg_fraction_total->Draw();
-  lg_fraction_total->SetTextSize(0.04);
-      
-  h2_basic_fraction->Draw("same axis");
-  canv_h2_basic_fraction->SaveAs("canv_h2_basic_fraction.png");
-  
-  /////////////////////////
-
-  TCanvas *canv_h1_pred_totalsyst = new TCanvas("canv_h1_pred_totalsyst", "canv_h1_pred_totalsyst", 1300, 700);
-  func_canv_margin(canv_h1_pred_totalsyst, 0.15, 0.1, 0.11, 0.15);
-  canv_h1_pred_totalsyst->SetLogy();
-  
-  TH1D *h1_pred_totalsyst_clone = (TH1D*)h1_pred_totalsyst->Clone("h1_pred_totalsyst_clone");
-  
-  h1_pred_totalsyst->Draw("e2"); h1_pred_totalsyst->SetFillColor(kRed); h1_pred_totalsyst->SetMarkerSize(0);
-  h1_pred_totalsyst->SetMinimum(1e-3);
-  func_title_size(h1_pred_totalsyst, 0.05, 0.05, 0.05, 0.05);
-  func_xy_title(h1_pred_totalsyst, "Bin index", "Entries");
-  h1_pred_totalsyst->GetXaxis()->CenterTitle(); h1_pred_totalsyst->GetYaxis()->CenterTitle();
-  h1_pred_totalsyst->GetXaxis()->SetTitleOffset(1.2); h1_pred_totalsyst->GetYaxis()->SetTitleOffset(1.05);  
-  
-  h1_pred_totalsyst_clone->Draw("same hist"); h1_pred_totalsyst_clone->SetLineColor(kBlack);
-
-  canv_h1_pred_totalsyst->cd(); canv_h1_pred_totalsyst->Update(); double ymax_canv_h1_pred_totalsyst = gPad->GetUymax();
-  for(int idx=1; idx<num_ch; idx++) {
-    line_root_xx[idx]->Draw(); line_root_xx[idx]->SetLineStyle(7);
-    line_root_xx[idx]->SetY2( pow(10, ymax_canv_h1_pred_totalsyst) );
-    line_root_xx[idx]->SetY1(1e-3);
-  }
-
-  canv_h1_pred_totalsyst->SaveAs("canv_h1_pred_totalsyst.png");
-  
-  /////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////
-
-  
-  
-    
+    TCanvas *c2 = new TCanvas("c2","Predicted totalsyst",1200,700);
+    h1_pred_totalsyst->Draw("hist");
+    c2->SaveAs("pred_totalsyst.png");
 }
 
 ///////////////////////////////////////////////////////// ccc
@@ -2422,7 +2225,6 @@ void TLee::Set_config_file_directory(TString spectra_file_, TString flux_Xs_dire
   cout<<Form(" mc_directory       %-10s", mc_directory.Data() )<<endl;  
 }
 
-
 void TLee::Set_Spectra_MatrixCov()
 {
   /// spectra should be consist with matrix-cov order
@@ -2432,27 +2234,11 @@ void TLee::Set_Spectra_MatrixCov()
 
   ////////////////////////////////////// pred
   
-  map_input_spectrum_ch_str[1] = "nueCC_FC_norm";
-  map_input_spectrum_ch_str[2] = "nueCC_PC_norm";
-  map_input_spectrum_ch_str[3] = "numuCC_FC_norm";
-  map_input_spectrum_ch_str[4] = "numuCC_PC_norm";
-  map_input_spectrum_ch_str[5] = "CCpi0_FC_norm";
-  map_input_spectrum_ch_str[6] = "CCpi0_PC_norm";
-  map_input_spectrum_ch_str[7] = "NCpi0_norm";
-  map_input_spectrum_ch_str[8] = "Lee_FC";
-  map_input_spectrum_ch_str[9] = "Lee_PC"; 
-  map_input_spectrum_ch_str[10]= "nueCC_FC_ext";
-  map_input_spectrum_ch_str[11]= "nueCC_PC_ext";
-  map_input_spectrum_ch_str[12]= "numuCC_FC_ext";
-  map_input_spectrum_ch_str[13]= "numuCC_PC_ext";
-  map_input_spectrum_ch_str[14]= "CCpi0_FC_ext";
-  map_input_spectrum_ch_str[15]= "CCpi0_PC_ext";
-  map_input_spectrum_ch_str[16]= "NCpi0_ext";
-
-  /// flag for LEE channels corresponding to the cov_input.txt
-  map_Lee_ch[8] = 1;
-  map_Lee_ch[9] = 1;
-  
+//map_input_spectrum_ch_str[0] = "nueCC_Holly_RHC_data";
+map_input_spectrum_ch_str[1] = "nueCC_Holly_FHC_intrinsic";
+map_input_spectrum_ch_str[2] = "nueCC_Holly_FHC_overlay";
+map_input_spectrum_ch_str[3] = "nueCC_Holly_FHC_ext";
+//map_input_spectrum_ch_str[4] = "nueCC_Holly_RHC_dirt"; 
 
   ///////////////////////////////////////
 
@@ -2543,7 +2329,7 @@ void TLee::Set_Spectra_MatrixCov()
     
   }
   cout<<endl;
-  
+   
   ////////////////////
   ////////////////////
 
@@ -2560,13 +2346,18 @@ void TLee::Set_Spectra_MatrixCov()
 
   ////////////////////////////////////// data
   
-  cout<<" Observations"<<endl;
-  
+ cout<<" Observations"<<endl;
+ channels_observation = 1; 
   int line_data = -1;
   bins_newworld = 0;
   for(int ich=1; ich<=channels_observation; ich++) {
     roostr = TString::Format("hdata_obsch_%d", ich);
     TH1F *h1_spectrum = (TH1F*)file_spectra->Get(roostr);
+    // <-- ADD THIS NULL CHECK
+if(!h1_spectrum) {
+    cout << "Warning: histogram " << roostr << " not found!" << endl;
+    continue;  // skip this channel
+}
     cout<<Form(" %2d  %-20s   bin-num %2d", ich, roostr.Data(), h1_spectrum->GetNbinsX()+1)<<endl;
         
     for(int ibin=1; ibin<=h1_spectrum->GetNbinsX()+1; ibin++) {
@@ -2579,64 +2370,93 @@ void TLee::Set_Spectra_MatrixCov()
     }// ibin
   }// ich
   cout<<endl;
-  
+
+
   ////////////////////////////////////////// flux_Xs
-  
-  cout<<" Flux and Xs systematics"<<endl;
-    
-  //https://www.phy.bnl.gov/xqian/talks/wire-cell/LEEana/configurations/cov_input.txt  
-  map<int, TFile*>map_file_flux_Xs_frac;  
-  map<int, TMatrixD*>map_matrix_flux_Xs_frac;
-  
-  TMatrixD matrix_flux_Xs_frac(bins_oldworld, bins_oldworld);
-  TMatrixD matrix_flux_frac(bins_oldworld, bins_oldworld);
-  TMatrixD matrix_Xs_frac(bins_oldworld, bins_oldworld);
-  TMatrixD matrix_reweight_frac(bins_oldworld, bins_oldworld);
-  TMatrixD matrix_reweight_cor_frac(bins_oldworld, bins_oldworld);
-  
-  for(int idx=syst_cov_flux_Xs_begin; idx<=syst_cov_flux_Xs_end; idx++) {
-    if( !(flag_syst_flux_Xs) && idx<18 ){
-      matrix_flux_Xs_frac = 0;
-      matrix_flux_frac = 0;
-      matrix_Xs_frac = 0;
-      continue;
-    }
-    if( !(flag_syst_reweight) && idx==18 ){
-      matrix_reweight_frac = 0;
-      continue;
-    }
-    if( !(flag_syst_reweight_cor) && idx==19 ){
-      matrix_reweight_cor_frac = 0;
-      continue;
+
+cout<<" Flux and Xs systematics"<<endl;
+
+// https://www.phy.bnl.gov/xqian/talks/wire-cell/LEEana/configurations/cov_input.txt
+map<int, TFile*> map_file_flux_Xs_frac;
+map<int, TMatrixD*> map_matrix_flux_Xs_frac;
+
+TMatrixD matrix_flux_Xs_frac(bins_oldworld, bins_oldworld);
+TMatrixD matrix_flux_frac(bins_oldworld, bins_oldworld);
+TMatrixD matrix_Xs_frac(bins_oldworld, bins_oldworld);
+TMatrixD matrix_reweight_frac(bins_oldworld, bins_oldworld);
+TMatrixD matrix_reweight_cor_frac(bins_oldworld, bins_oldworld);
+
+// Only the covariance matrices you want
+std::vector<int> flux_xs_indices = {3, 14, 15, 16, 17};
+for(int idx : flux_xs_indices) {
+
+    cout << "-------------------------------" << endl;
+    cout << "Processing index: " << idx << endl;
+    flag_syst_flux_Xs = true;
+    if( !(flag_syst_flux_Xs) ){
+        cout << "flag_syst_flux_Xs is false -> zeroing matrices and skipping index " << idx << endl;
+        matrix_flux_Xs_frac = 0;
+        matrix_flux_frac = 0;
+        matrix_Xs_frac = 0;
+        continue;
     }
 
-    roostr = TString::Format(flux_Xs_directory+"cov_%d.root", idx);
+    TString roostr = TString::Format("%s/cov_%d.root", flux_Xs_directory.Data(), idx);
+    cout << "Trying to open ROOT file: " << roostr << endl;
+
     map_file_flux_Xs_frac[idx] = new TFile(roostr, "read");
-    map_matrix_flux_Xs_frac[idx] = (TMatrixD*)map_file_flux_Xs_frac[idx]->Get(TString::Format("frac_cov_xf_mat_%d", idx));
-    cout<<TString::Format(" %2d %s", idx, roostr.Data())<<endl;
+    if(!map_file_flux_Xs_frac[idx] || map_file_flux_Xs_frac[idx]->IsZombie()){
+        cout << " ERROR: Could not open file " << roostr << endl;
+        continue;
+    }
 
+    cout << "File opened successfully." << endl;
+
+    TString matrixName = TString::Format("frac_cov_xf_mat_%d", idx);
+    map_matrix_flux_Xs_frac[idx] = (TMatrixD*)map_file_flux_Xs_frac[idx]->Get(matrixName);
+
+    if(!map_matrix_flux_Xs_frac[idx]){
+        cout << " ERROR: Missing matrix '" << matrixName << "' in file " << roostr << endl;
+        cout << "Available objects in file:" << endl;
+        map_file_flux_Xs_frac[idx]->ls(); // lists objects in the ROOT file
+        continue;
+    }
+
+    cout << "Loaded matrix '" << matrixName << "' successfully." << endl;
+
+    // Debug: print matrix size
+    cout << "Matrix size: " << map_matrix_flux_Xs_frac[idx]->GetNrows()
+         << " x " << map_matrix_flux_Xs_frac[idx]->GetNcols() << endl;
+
+    // Copy to submatrix
     matrix_sub_flux_geant4_Xs_oldworld[idx].Clear();
     matrix_sub_flux_geant4_Xs_oldworld[idx].ResizeTo(bins_oldworld, bins_oldworld);
-    matrix_sub_flux_geant4_Xs_oldworld[idx] += (*map_matrix_flux_Xs_frac[idx]); 
-    
-    //if( idx!=17 )
-    matrix_flux_Xs_frac += (*map_matrix_flux_Xs_frac[idx]);    
-    
-    if( idx<=16 ) {// flux
-      matrix_flux_frac += (*map_matrix_flux_Xs_frac[idx]);
-    }else if( idx==17 ){// interaction
-      matrix_Xs_frac += (*map_matrix_flux_Xs_frac[idx]);
-    }else if( idx==18 ) {//reweight
-      matrix_reweight_frac += (*map_matrix_flux_Xs_frac[idx]);
-    }else if( idx==19 ) {//reweight cor
-      matrix_reweight_cor_frac += (*map_matrix_flux_Xs_frac[idx]);
-    }    
-  }
-  cout<<endl;  
+    matrix_sub_flux_geant4_Xs_oldworld[idx] += (*map_matrix_flux_Xs_frac[idx]);
+    cout << "Updated submatrix for index " << idx << endl;
+
+    // Add to cumulative matrices
+    matrix_flux_Xs_frac += (*map_matrix_flux_Xs_frac[idx]);
+    cout << "Added to matrix_flux_Xs_frac." << endl;
+
+    if( idx<=16 ){ // flux
+        matrix_flux_frac += (*map_matrix_flux_Xs_frac[idx]);
+        cout << "Added to matrix_flux_frac (flux)." << endl;
+    }
+    else if( idx==17 ){ // interaction
+        matrix_Xs_frac += (*map_matrix_flux_Xs_frac[idx]);
+        cout << "Added to matrix_Xs_frac (interaction)." << endl;
+    }
+
+    cout << "Finished processing index " << idx << endl;
+}
+cout << "===============================" << endl;
+cout << "All indices processed." << endl; 
   
   ////////////////////////////////////////// detector
 
   cout<<" Detector systematics"<<endl;
+
+  cout<<" WORKING "<<endl;
     
   map<int, TString>map_detectorfile_str;
   
@@ -2651,18 +2471,18 @@ void TLee::Set_Spectra_MatrixCov()
   map_detectorfile_str[9] = detector_directory+"cov_WMYZ.root";
   map_detectorfile_str[10]= detector_directory+"cov_LYatt.root";
   
-  
+ cout<<" WORKING"<<endl; 
   map<int, TFile*>map_file_detector_frac;
   map<int, TMatrixD*>map_matrix_detector_frac;
   TMatrixD matrix_detector_frac(bins_oldworld, bins_oldworld);
   map<int, TMatrixD>matrix_detector_sub_frac;
-  
+  cout<<" WORKING"<<endl; 
   for( auto it=map_detectorfile_str.begin(); it!=map_detectorfile_str.end(); it++ ) {
     int idx = it->first;
     if(idx==5)  continue;    
     roostr = map_detectorfile_str[idx];
     cout<<TString::Format(" %2d %s", idx, roostr.Data())<<endl;
-    
+    cout<<" WORKING"<<endl;
     map_file_detector_frac[idx] = new TFile(roostr, "read");
     map_matrix_detector_frac[idx] = (TMatrixD*)map_file_detector_frac[idx]->Get(TString::Format("frac_cov_det_mat_%d", idx));
 
@@ -2775,74 +2595,78 @@ void TLee::Set_Spectra_MatrixCov()
 
   matrix_input_cov_additional = matrix_additional_abs;
   
-  ////////////////////////////////////////// MC statistics
+ ////////////////////////////////////////// MC statistics
 
-  int mc_file_begin = syst_cov_mc_stat_begin;
-  int mc_file_end = syst_cov_mc_stat_end;
-  
-  cout<<TString::Format(" MC statistics. Files:  %d.log - %d.log", mc_file_begin, mc_file_end)<<endl;
-  
-  map<int, map<int, double> >map_mc_stat_file_bin_Lee;
-  map<int, map<int, double> >map_mc_stat_file_bin_mcStat;
-  int gbins_mc_stat = 0;
-    
-  for(int ifile=mc_file_begin; ifile<=mc_file_end; ifile++) {
+int mc_file_begin = 0;
+int mc_file_end   = 99;
+
+cout << TString::Format(" MC statistics. Files:  %d.log - %d.log", mc_file_begin, mc_file_end) << endl;
+
+map<int, map<int, double>> map_mc_stat_file_bin_Lee;
+map<int, map<int, double>> map_mc_stat_file_bin_mcStat;
+int gbins_mc_stat = 0;
+
+for(int ifile = mc_file_begin; ifile <= mc_file_end; ifile++) {
     roostr = TString::Format(mc_directory+"%d.log", ifile);
-    
-    ifstream InputFile_aa(roostr, ios::in);
-    if(!InputFile_aa) { cerr<<" No input-list"<<endl; exit(1); }
 
-    /////////////////////// check
+    ifstream InputFile(roostr);
+    if(!InputFile) { cerr << "No input file: " << roostr << endl; exit(1); }
 
+    /////////////////////// count lines (skip first line)
     int count_check = 0;
-    string line_check;    
-    ifstream file_check(roostr);
-    while( getline(file_check, line_check) ) count_check++;
-    //cout<<endl<<" Numbers of lines in the mc_stat file: "<<count_check<<endl<<endl;
-    
-    gbins_mc_stat = count_check -1;
-    if( gbins_mc_stat!=bins_newworld ) {
-      cout<<" Error gbins_mc_stat!=bins_newworld: "<<roostr<<endl;
-      cerr<<" Error gbins_mc_stat!=bins_newworld: "<<roostr<<endl;
-      exit(1);
-    }
-    
-    ///////////////////////
-    
-    int line = 0;    
-    double Lee = 1; double run = 1;
-    
-    for(int idx=1; idx<=gbins_mc_stat+1; idx++) {            
-      int gbin = 0; int lbin = 0; double val_pred = 0; double mc_stat = 0; double nn_stat = 0;
-      if(idx==1) { InputFile_aa>>Lee>>run; }
-      else {
-	InputFile_aa>>gbin>>lbin>>val_pred>>mc_stat>>nn_stat;
-	line++;
-	map_mc_stat_file_bin_Lee[ifile][line-1] = Lee;
-	map_mc_stat_file_bin_mcStat[ifile][line-1] = mc_stat;
-      }
-    }
-  }
-  
-  /// gh_mc_stat_bin
-  for(int ibin=0; ibin<gbins_mc_stat; ibin++) {
-    gh_mc_stat_bin[ibin] = new TGraph(); gh_mc_stat_bin[ibin]->SetName(TString::Format("gh_mc_stat_bin_%03d", ibin));
-    
-    for(auto it=map_mc_stat_file_bin_Lee.begin(); it!=map_mc_stat_file_bin_Lee.end(); it++) {
-      int ifile = it->first;
-      double Lee = map_mc_stat_file_bin_Lee[ifile][ibin];
-      double mc_stat = map_mc_stat_file_bin_mcStat[ifile][ibin];
-      gh_mc_stat_bin[ibin]->SetPoint( gh_mc_stat_bin[ibin]->GetN(), Lee, mc_stat );
-    }
-    
-    double x,y;
-    gh_mc_stat_bin[ibin]->GetPoint( gh_mc_stat_bin[ibin]->GetN()-1, x, y);
-    gh_mc_stat_bin[ibin]->SetPoint( gh_mc_stat_bin[ibin]->GetN(), x+1, y);
-  }  
+    string line_check;
 
-  cout<<endl;
-  cout<<" ---> Complete the initialization"<<endl;
-  cout<<" ---> Complete the initialization"<<endl;  
-  cout<<endl;
-  
+    // Skip first line
+    getline(InputFile, line_check);
+
+    while(getline(InputFile, line_check)) count_check++;
+    gbins_mc_stat = count_check;
+
+    if(gbins_mc_stat != bins_newworld) {
+        cerr << "Error: gbins_mc_stat != bins_newworld: " << roostr << endl;
+        exit(1);
+    }
+
+    /////////////////////// reset file to beginning and skip first line
+    InputFile.clear();
+    InputFile.seekg(0, ios::beg);
+    getline(InputFile, line_check); // skip first line
+
+    /////////////////////// read numeric bin lines
+    int line = 0;
+    double Lee = 1; // set Lee if needed
+
+    for(int idx = 0; idx < gbins_mc_stat; idx++) {
+        int gbin = 0, lbin = 0;
+        double val_pred = 0, mc_stat = 0, nn_stat = 0;
+
+        InputFile >> gbin >> lbin >> val_pred >> mc_stat >> nn_stat;
+
+        map_mc_stat_file_bin_Lee[ifile][line] = Lee;
+        map_mc_stat_file_bin_mcStat[ifile][line] = mc_stat;
+        line++;
+    }
+}
+
+/////////////////////////// fill TGraphs
+for(int ibin = 0; ibin < gbins_mc_stat; ibin++) {
+    gh_mc_stat_bin[ibin] = new TGraph();
+    gh_mc_stat_bin[ibin]->SetName(TString::Format("gh_mc_stat_bin_%03d", ibin));
+
+    for(auto it = map_mc_stat_file_bin_Lee.begin(); it != map_mc_stat_file_bin_Lee.end(); it++) {
+        int ifile = it->first;
+        double Lee = map_mc_stat_file_bin_Lee[ifile][ibin];
+        double mc_stat = map_mc_stat_file_bin_mcStat[ifile][ibin];
+
+        gh_mc_stat_bin[ibin]->SetPoint(gh_mc_stat_bin[ibin]->GetN(), Lee, mc_stat);
+    }
+
+    // extend last point by 1 in X
+    double x, y;
+    gh_mc_stat_bin[ibin]->GetPoint(gh_mc_stat_bin[ibin]->GetN()-1, x, y);
+    gh_mc_stat_bin[ibin]->SetPoint(gh_mc_stat_bin[ibin]->GetN(), x+1, y);
+}
+
+cout << endl << " ---> Complete the initialization" << endl << endl;
+
 }

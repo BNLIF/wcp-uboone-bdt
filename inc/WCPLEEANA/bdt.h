@@ -666,15 +666,17 @@ TMVA::Reader* LEEana::fetch_bdtreader(TString var_name){
 		float mip_quality_n_showers;
 		float kine_reco_Enu;
 		float shower_energy;
-
+		std::cout << "AAAAAAAAAAAAA"  << std::endl;
+		std::cout << var_name  << std::endl;
 		reader->AddVariable("Num_Proton", &Num_Proton);
 		reader->AddVariable("cos_theta", &cos_theta);
 		reader->AddVariable("Num_Neutron", &Num_Neutron);
 		reader->AddVariable("mip_quality_n_showers", &mip_quality_n_showers);
 		reader->AddVariable("kine_reco_Enu", &kine_reco_Enu);
 		reader->AddVariable("shower_energy", &shower_energy);
-		reader->BookMVA(var_name+"_fhc", "bdt_weights/"+var_name+"_fhc.xml");
-		reader->BookMVA(var_name+"_rhc", "bdt_weights/"+var_name+"_rhc.xml");
+		reader->BookMVA("holly_antinue_bdt_fhc", TString("bdt_weights/") + "holly_antinue_bdt_fhc.xml");
+		reader->BookMVA("holly_antinue_bdt_rhc", TString("bdt_weights/") + "holly_antinue_bdt_rhc.xml");
+
 
 		return reader;
 	}

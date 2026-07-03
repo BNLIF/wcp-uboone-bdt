@@ -36,7 +36,8 @@ namespace LEEana{
   // correct reco neutrino energy and reco shower energy
   double get_reco_Enu_corr(KineInfo& kine, bool flag_data);
   double get_reco_showerKE_corr(PFevalInfo& pfeval, bool flag_data);
-  
+  double get_reco_nuX_adjusted(const PFevalInfo& pfeval,
+                             bool flag_data);  
   double get_reco_Eproton(KineInfo& kine);
   double get_reco_Epion(KineInfo& kine);
 
@@ -60,7 +61,11 @@ namespace LEEana{
   // TCut nueCC_cut = "numu_cc_flag >=0 && nue_score > 7.0";
   bool is_nueCC(TaggerInfo& tagger_info);
   bool is_loosenueCC(TaggerInfo& tagger_info);
-  
+  //adding my code HP160226
+  bool is_nueCC_Holly_FHC(TaggerInfo& tagger_info,
+                       PFevalInfo& pfeval,
+                       bool flag_data);
+  bool is_nueCC_Holly_RHC(TaggerInfo& tagger_info, PFevalInfo& pfeval, bool flag_data);  
   bool is_far_sideband(KineInfo& kine, TaggerInfo& tagger, bool flag_data);
   bool is_near_sideband(KineInfo& kine, TaggerInfo& tagger, bool flag_data);
   bool is_LEE_signal(KineInfo& kine, TaggerInfo& tagger, bool flag_data);
@@ -105,7 +110,7 @@ namespace LEEana{
   // TCut truth_numuCC_inside = "abs(truth_nuPdg)==14 && truth_isCC==1 && truth_vtxInside==1";
   bool is_truth_nueCC_inside(EvalInfo& eval);
   bool is_truth_numuCC_inside(EvalInfo& eval);
-
+  bool is_truth_nueCC_Holly(EvalInfo& eval);
   bool is_true_0p(PFevalInfo& pfeval);
 
   int mcc8_pmuon_costheta_bin(float pmuon, float costh);
@@ -135,6 +140,21 @@ double LEEana::get_reco_Enu_corr(KineInfo& kine, bool flag_data){
     }
   }
   return kine.kine_reco_Enu;
+}
+
+
+
+
+double LEEana::get_reco_nuX_adjusted(const PFevalInfo& pfeval,
+                                    bool flag_data)
+{
+double x = pfeval.reco_nuvtxX;
+
+    if (!flag_data) {   // apply correction only for real data
+        x -= 1.0;
+    }
+
+    return x;
 }
 
 double LEEana::get_reco_showerKE_corr(PFevalInfo& pfeval, bool flag_data){
@@ -294,7 +314,12 @@ double LEEana::get_kine_var(KineInfo& kine, EvalInfo& eval, PFevalInfo& pfeval, 
   //  }else
   if (var_name == "kine_reco_Enu"){
     return get_reco_Enu_corr(kine, flag_data);
-  }else if (var_name == "reco_showerKE"){
+  }
+  else if (var_name == "reco_nuX_adjusted") {
+    return get_reco_nuX_adjusted(pfeval, flag_data);
+} 
+  
+  else if (var_name == "reco_showerKE"){
     return get_reco_showerKE_corr(pfeval, flag_data) * 1000.;
   }else if (var_name == "kine_reco_Eproton"){
     return get_reco_Eproton(kine);
@@ -1385,21 +1410,14 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
       else if (cut_name == "numuCC.inside.Pmuon.theta1.le.450.gt.300"){
       if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=300.00 && pmuon<450.00 && costh>=-0.50 && costh<0.00 ) return number;
         }
-      else if (cut_name == "numuCC.inside.Pmuon.theta1.le.2500.gt.450"){
-      if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=450.00 && pmuon<2500.00 && costh>=-0.50 && costh<0.00 ) return number;
-        }
-      else if (cut_name == "numuCC.inside.Pmuon.theta2.le.180.gt.0"){
-      if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=0.00 && pmuon<180.00 && costh>=0.00 && costh<0.27 ) return number;
-        }
-      else if (cut_name == "numuCC.inside.Pmuon.theta2.le.300.gt.180"){
-      if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=180.00 && pmuon<300.00 && costh>=0.00 && costh<0.27 ) return number;
-        }
-      else if (cut_name == "numuCC.inside.Pmuon.theta2.le.450.gt.300"){
-      if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=300.00 && pmuon<450.00 && costh>=0.00 && costh<0.27 ) return number;
-        }
-      else if (cut_name == "numuCC.inside.Pmuon.theta2.le.2500.gt.450"){
-      if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=450.00 && pmuon<2500.00 && costh>=0.00 && costh<0.27 ) return number;
-        }
+     if (cut_name == "numuCC.inside.Pmuon.theta1.le.2500.gt.450") {
+    if (eval.truth_nuPdg == 14 && eval.truth_isCC == 1 && eval.truth_vtxInside == 1 &&
+        pmuon >= 450.0 && pmuon < 2500.0 && costh >= -0.50 && costh < 0.00) 
+    {
+        return number;
+    }
+} 
+
         else if (cut_name == "numuCC.inside.Pmuon.theta3.le.300.gt.0"){
       if (eval.truth_nuPdg==14 && eval.truth_isCC==1 && eval.truth_vtxInside==1 && pmuon>=0.00 && pmuon<300.00 && costh>=0.27 && costh<0.45 ) return number;
         }
@@ -1654,6 +1672,69 @@ int LEEana::get_xs_signal_no(int cut_file, std::map<TString, int>& map_cut_xs_bi
   return -1;
 }
 
+//implementing my cut HP160226
+bool LEEana::is_nueCC_Holly_FHC(TaggerInfo& tagger_info,
+                               PFevalInfo& pfeval,
+                               bool flag_data)
+{
+    bool flag = false;
+
+    // Fiducial Volume parameters
+    const float tpc_xmin = 0.0,   tpc_xmax = 254.3;
+    const float tpc_ymin = -115.0, tpc_ymax = 117.0;
+    const float tpc_zmin = 0.6,   tpc_zmax = 1036.4;
+
+    // --- USE CORRECTED X ---
+    double nuX = get_reco_nuX_adjusted(pfeval, flag_data);
+
+    bool fv_cut =
+        (nuX > tpc_xmin + 4 && nuX < tpc_xmax - 0 &&
+         pfeval.reco_nuvtxY > tpc_ymin + 3 &&
+         pfeval.reco_nuvtxY < tpc_ymax - 9 &&
+         pfeval.reco_nuvtxZ > tpc_zmin + 12 &&
+         pfeval.reco_nuvtxZ < tpc_zmax - 11);
+
+    if (tagger_info.numu_cc_flag >= 0 &&
+        tagger_info.nue_score > 5.0 &&
+        pfeval.reco_showerMomentum[3] >= 0 &&
+        fv_cut) {
+        flag = true;
+    }
+
+    return flag;
+}
+
+bool LEEana::is_nueCC_Holly_RHC(TaggerInfo& tagger_info, PFevalInfo& pfeval, bool flag_data) {
+ bool flag = false;
+
+ //Fiducial Volume parameters
+const float tpc_xmin = 0.0, tpc_xmax = 254.3;
+ const float tpc_ymin = -115.0, tpc_ymax = 117.0;
+ const float tpc_zmin = 0.6, tpc_zmax = 1036.4; 
+
+// --- USE CORRECTED X ---
+    double nuX = get_reco_nuX_adjusted(pfeval, flag_data);
+
+
+
+ bool fv_cut =
+        (nuX > tpc_xmin + 4 && nuX < tpc_xmax - 1 &&
+         pfeval.reco_nuvtxY > tpc_ymin + 3 &&
+         pfeval.reco_nuvtxY < tpc_ymax - 12 &&
+         pfeval.reco_nuvtxZ > tpc_zmin + 10 &&
+         pfeval.reco_nuvtxZ < tpc_zmax - 10);
+
+    if (tagger_info.numu_cc_flag >= 0 &&
+        tagger_info.nue_score > 5.0 &&
+        pfeval.reco_showerMomentum[3] >= 0 &&
+        fv_cut) {
+        flag = true;
+    }
+
+    return flag;
+}
+
+
 bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, EvalInfo& eval, PFevalInfo& pfeval, TaggerInfo& tagger, KineInfo& kine, std::shared_ptr<TMVA::Reader> reader){
 
 
@@ -1846,7 +1927,10 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
   bool flag_numuCC_cutbased = is_numuCC_cutbased(tagger);
   bool flag_nueCC = is_nueCC(tagger);
   bool flag_nueCC_loose = is_loosenueCC(tagger);
-  
+  bool flag_nueCC_Holly_FHC = is_nueCC_Holly_FHC(tagger, pfeval, flag_data);
+  bool flag_truth_nueCC_Holly = is_truth_nueCC_Holly(eval);
+  bool flag_nueCC_Holly_RHC = is_nueCC_Holly_RHC(tagger, pfeval, flag_data);
+ // added some code HP160226 
   bool flag_0p = is_0p(tagger, kine, pfeval);
   bool flag_1p = is_1p(tagger, kine, pfeval);
   bool flag_0pi = is_0pi(tagger, kine, pfeval);
@@ -1870,10 +1954,62 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
   int Pmu_bin      = get_Pmuon_bin(reco_pmuon);
   int Enu_bin      = get_Enu_bin(reco_Enu);
 
+  //unsure if I'm putting my cuts in the right place! HP160226
+
   if (ch_name == "LEE_FC_nueoverlay"  || ch_name == "nueCC_FC_nueoverlay"){
     if (flag_nueCC && flag_FC && flag_truth_inside) return true;
     else return false;
-  }else if (ch_name == "nueCC_FC_nueoverlay_numi"){
+  }else if (ch_name == "nueCC_Holly_FHC_data"){
+    return flag_nueCC_Holly_FHC;
+}
+else if (ch_name == "nueCC_Holly_FHC_ext"){
+    return flag_nueCC_Holly_FHC;
+}
+
+else if (ch_name == "nueCC_Holly_FHC_overlay") {
+  return flag_nueCC_Holly_FHC &&
+         !(eval.truth_isCC == 1 && abs(eval.truth_nuPdg) == 12);
+}
+
+else if (ch_name == "nueCC_Holly_FHC_intrinsic") {
+  return flag_nueCC_Holly_FHC &&
+         (eval.truth_isCC == 1 && abs(eval.truth_nuPdg) == 12);
+}
+
+else if (ch_name == "nueCC_Holly_FHC_dirt") {
+    return flag_nueCC_Holly_FHC;
+}
+
+
+
+else if (ch_name == "nueCC_Holly_RHC_data"){
+    return flag_nueCC_Holly_RHC;
+}
+else if (ch_name == "nueCC_Holly_RHC_ext"){
+    return flag_nueCC_Holly_RHC;
+}
+
+else if (ch_name == "nueCC_Holly_RHC_overlay") {
+  return flag_nueCC_Holly_RHC &&
+         !(eval.truth_isCC == 1 && abs(eval.truth_nuPdg) == 12);
+}
+
+else if (ch_name == "nueCC_Holly_RHC_intrinsic") {
+  return flag_nueCC_Holly_RHC &&
+         (eval.truth_isCC == 1 && abs(eval.truth_nuPdg) == 12);
+}
+
+
+
+else if (ch_name == "nueCC_Holly_RHC_dirt") {
+    return flag_nueCC_Holly_RHC;
+}
+
+
+
+
+
+else if (ch_name == "nueCC_FC_nueoverlay_numi"){
     if (flag_nueCC && flag_FC && flag_truth_inside) return true;
     else return false;
   }else if ( ch_name == "nueCC_FC_numu2nueoverlay" ){
@@ -2376,7 +2512,7 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
          || ch_name == "BG_numuCC_theta7_PC_ext_v2"              || ch_name =="BG_numuCC_theta7_PC_dirt_v2"              || ch_name == "numuCC_theta7_PC_bnb_v2" ){
     if (flag_numuCC && (!flag_FC) && (!flag_nueCC) && (pfeval.reco_muonMomentum[3]>0) && (TMath::Cos(muonMomentum.Theta())>=costheta_binning[7] && TMath::Cos(muonMomentum.Theta())<=costheta_binning[8])) {
       if      (ch_name == "numuCC_signal_Enu_theta7_PC_overlay" || ch_name == "numuCC_background_Enu_theta7_PC_overlay") { return (map_cuts_flag["Xs_Enu_numuCCinFV"] == (ch_name=="numuCC_signal_Enu_theta7_PC_overlay")); }
-      else if (ch_name == "numuCC_signal_Emu_theta7_PC_overlay" || ch_name == "numuCC_background_Emu_theta7_PC_overlay") { return (map_cuts_flag["Xs_Emu_numuCCinFV"] == (ch_name=="numuCC_signal_Emu_theta7_PC_overlay")); }
+      else if (ch_name == "numuCC_signal_Emu_theta7_PC_overlay"|| ch_name == "numuCC_background_Emu_theta7_PC_overlay") { return (map_cuts_flag["Xs_Emu_numuCCinFV"] == (ch_name=="numuCC_signal_Emu_theta7_PC_overlay")); }
       else if (ch_name == "numuCC_signal_Pmu_theta7_PC_overlay" || ch_name == "numuCC_background_Pmu_theta7_PC_overlay") { return (map_cuts_flag["Xs_Pmu_numuCCinFV"] == (ch_name=="numuCC_signal_Pmu_theta7_PC_overlay")); }
       else if (ch_name ==  "numuCC_signal_nu_theta7_PC_overlay" || ch_name ==  "numuCC_background_nu_theta7_PC_overlay") { return (map_cuts_flag["Xs_Ehad_numuCCinFV"]== (ch_name== "numuCC_signal_nu_theta7_PC_overlay")); }
       else return true;
@@ -2398,7 +2534,7 @@ bool LEEana::get_cut_pass(TString ch_name, TString add_cut, bool flag_data, Eval
       if      (ch_name == "numuCC_signal_Enu0_theta0_Pmu_PC_overlay" || ch_name == "numuCC_background_Enu0_theta0_Pmu_PC_overlay") { return (map_cuts_flag["Xs_Enu_Pmu_numuCCinFV"] == (ch_name=="numuCC_signal_Enu0_theta0_Pmu_PC_overlay")); }
       else return true;
     } else return false;
-  }else if (ch_name == "numuCC_signal_Enu0_theta1_Pmu_PC_overlay" || ch_name == "numuCC_background_Enu0_theta1_Pmu_PC_overlay"
+  }else if (ch_name == "numuCC_signal_Enu0_theta1_Pmu_PC_overlaey" || ch_name == "numuCC_background_Enu0_theta1_Pmu_PC_overlay"
          || ch_name == "BG_numuCC_Enu0_theta1_Pmu_PC_ext"         || ch_name =="BG_numuCC_Enu0_theta1_Pmu_PC_dirt" || ch_name == "numuCC_Enu0_theta1_Pmu_PC_bnb"){
     if (flag_numuCC && (!flag_FC) && (!flag_nueCC) && (pfeval.reco_muonMomentum[3]>0) && Enu_bin==0 && costheta_bin==1) {
       if      (ch_name == "numuCC_signal_Enu0_theta1_Pmu_PC_overlay" || ch_name == "numuCC_background_Enu0_theta1_Pmu_PC_overlay") { return (map_cuts_flag["Xs_Enu_Pmu_numuCCinFV"] == (ch_name=="numuCC_signal_Enu0_theta1_Pmu_PC_overlay")); }
@@ -3716,6 +3852,15 @@ bool LEEana::is_truth_nueCC_inside(EvalInfo& eval){
   if (fabs(eval.truth_nuPdg)==12 && eval.truth_isCC==1 && eval.truth_vtxInside==1)
     flag = true;
   
+  return flag;
+}
+
+bool LEEana::is_truth_nueCC_Holly(EvalInfo& eval){
+  bool flag = false;
+
+  if (fabs(eval.truth_nuPdg)==12 && eval.truth_isCC==1)
+    flag = true;
+
   return flag;
 }
 
