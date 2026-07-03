@@ -106,7 +106,7 @@ int main( int argc, char** argv )
     T->SetBranchAddress("pot",&pot);
     T->GetEntry(0);
 
-    if (filetype==5 || filetype == 15){
+    if (filetype==150 || filetype == 15){
       map_data_period_pot[period] = pot;
     }
     
@@ -150,7 +150,7 @@ int main( int argc, char** argv )
     TString out_filename = std::get<2>(it->second);
     int file_no = std::get<4>(it->second);
 
-    if (filetype == 5 || filetype == 15){
+    if (filetype ==150 || filetype == 15){
       // name, nbin, lowlimit, highlimit, variable, channel cut, additional cut, weight
       std::vector< std::tuple<TString,  int, float, float, TString, TString, TString, TString > > histo_infos = cov.get_histograms(input_filename,0);
       for (auto it1 = histo_infos.begin(); it1 != histo_infos.end(); it1++){

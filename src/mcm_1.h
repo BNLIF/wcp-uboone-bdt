@@ -703,6 +703,7 @@ void LEEana::CovMatrix::fill_det_histograms(std::map<TString, TH1D*> map_filenam
   T_PFeval_det->SetBranchStatus("nuvtx_diff",1);
   T_PFeval_det->SetBranchStatus("showervtx_diff",1);
   T_PFeval_det->SetBranchStatus("muonvtx_diff",1);
+  T_PFeval_det->SetBranchStatus("reco_showerMomentum",1);
   T_PFeval_det->SetBranchStatus("truth_muonMomentum",1);
   if (pfeval_det.flag_NCDelta){
     
